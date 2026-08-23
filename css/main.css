@@ -1,6 +1,4 @@
 @charset "UTF-8";
-@import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css");
-@import url("https://fonts.googleapis.com/css?family=Open+Sans");
 /**
  * Reset some basic elements
  */
@@ -224,86 +222,121 @@ pre > code {
 
 /**
  * Site header
+ *
+ * Navy bar carrying the same grid texture as the front-page hero, so on the
+ * home page the two read as one dark block and the nav does not look bolted on.
+ * It is sticky because the schedule is long and the nav is the way back out.
  */
 .site-header {
-  border-top: 5px solid rgb(25.9803921569%, 25.9803921569%, 25.9803921569%);
-  border-bottom: 1px solid #e8e8e8;
-  min-height: 56px;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #000e54;
+  background-image: linear-gradient(115deg, rgba(247, 105, 0, 0.16) 0%, rgba(0, 0, 0, 0) 55%), repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, rgba(0, 0, 0, 0) 1px 34px), repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, rgba(0, 0, 0, 0) 1px 34px);
+  border-top: 4px solid #f76900;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 12px rgba(0, 0, 0, 0.22);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 58px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .site-title {
-  font-size: 26px;
-  font-weight: 300;
-  line-height: 56px;
-  letter-spacing: -1px;
-  margin-bottom: 0;
-  float: left;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
 }
-.site-title, .site-title:visited {
-  color: rgb(25.9803921569%, 25.9803921569%, 25.9803921569%);
+.site-title, .site-title:visited, .site-title:hover {
+  text-decoration: none;
+}
+.site-title__id {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
+.site-title__sep {
+  font-size: 19px;
+  font-weight: 300;
+  color: #f76900;
+}
+.site-title__name {
+  font-size: 15.5px;
+  font-weight: 400;
+  color: #c8d2e8;
+}
+.site-title:hover .site-title__name {
+  color: #fff;
 }
 
 .site-nav {
-  float: right;
-  line-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 26px;
 }
-.site-nav .menu-icon {
-  display: none;
+.site-nav .nav-link {
+  position: relative;
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #c8d2e8;
+  text-decoration: none;
 }
-.site-nav .page-link {
-  color: #111;
-  line-height: 1.5;
+.site-nav .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  background: #f76900;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.16s ease;
 }
-.site-nav .page-link:not(:last-child) {
-  margin-right: 20px;
+.site-nav .nav-link:hover, .site-nav .nav-link:focus-visible {
+  color: #fff;
+  text-decoration: none;
 }
-@media screen and (max-width: 600px) {
-  .site-nav {
-    position: absolute;
-    top: 9px;
-    right: 15px;
-    background-color: #fdfdfd;
-    border: 1px solid #e8e8e8;
-    border-radius: 5px;
-    text-align: right;
-  }
-  .site-nav .menu-icon {
-    display: block;
-    float: right;
-    width: 36px;
-    height: 26px;
-    line-height: 0;
-    padding-top: 10px;
-    text-align: center;
-  }
-  .site-nav .menu-icon > svg {
-    width: 18px;
-    height: 15px;
-  }
-  .site-nav .menu-icon > svg path {
-    fill: rgb(25.9803921569%, 25.9803921569%, 25.9803921569%);
-  }
-  .site-nav .trigger {
-    clear: both;
-    display: none;
-  }
-  .site-nav:hover .trigger {
-    display: block;
-    padding-bottom: 5px;
-  }
-  .site-nav .page-link {
-    display: block;
-    padding: 5px 10px;
-  }
-  .site-nav .page-link:not(:last-child) {
-    margin-right: 0;
-  }
-  .site-nav .page-link {
-    margin-left: 20px;
-  }
+.site-nav .nav-link:hover::after, .site-nav .nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+.site-nav .nav-link.is-current {
+  color: #fff;
+}
+.site-nav .nav-link.is-current::after {
+  transform: scaleX(1);
+  background: #0aa6b7;
 }
 
+@media screen and (max-width: 600px) {
+  .site-header__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+  .site-title {
+    white-space: normal;
+  }
+  .site-title__name {
+    display: none;
+  }
+  .site-nav {
+    gap: 20px;
+  }
+}
 /**
  * Site footer
  */
@@ -372,7 +405,12 @@ pre > code {
  * Page content
  */
 .page-content {
-  padding: 7.5px 0;
+  padding: 30px 0 7.5px;
+}
+
+:target,
+h1[id], h2[id], h3[id], h4[id] {
+  scroll-margin-top: 78px;
 }
 
 .page-heading {
@@ -1240,10 +1278,6 @@ ul p {
   height: 100px;
 }
 
-.introtext h1, h2, h3, h4 {
-  margin-bottom: 2px;
-}
-
 .introtext ul li {
   display: inline;
 }
@@ -1322,10 +1356,6 @@ ul p {
   color: black;
 }
 
-.compsecurity {
-  text-shadow: 2px 2px 3px #111, 0 0 25px #828282, 0 0 5px black;
-}
-
 .introtext a {
   color: white;
 }
@@ -1343,21 +1373,8 @@ ul p {
   witdh: 500px;
 }
 
-.introtext {
-  padding-top: 80px;
-  color: white;
-}
-
 #practice {
   padding-top: 60px;
-}
-
-.introtext h1 {
-  font-size: 50px;
-}
-
-.introtext h2 {
-  font-size: 30px;
 }
 
 .bs-docs-header {
@@ -1366,7 +1383,11 @@ ul p {
   background-color: #000729;
   background-image: linear-gradient(115deg, rgba(247, 105, 0, 0.2) 0%, rgba(0, 0, 0, 0) 45%), linear-gradient(300deg, rgba(10, 166, 183, 0.18) 0%, rgba(0, 0, 0, 0) 50%), linear-gradient(to bottom, #000e54 0%, #000729 100%), repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, rgba(0, 0, 0, 0) 1px 34px), repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, rgba(0, 0, 0, 0) 1px 34px);
   background-size: cover, cover, cover, 34px 34px, 34px 34px;
-  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  padding: 52px 20px 56px;
   background-repeat: no-repeat;
   background-position: center;
   overflow: hidden;
@@ -1616,5 +1637,72 @@ ul p {
 /*     width    : 100%; */
 /*     height   : 4em; */
 /* } */
+/**
+ * Front-page hero
+ */
+.introtext {
+  color: #fff;
+  text-align: center;
+  max-width: 780px;
+  width: 100%;
+}
+
+.course-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px 8px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.course-numbers li {
+  display: inline-block;
+  padding: 4px 12px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #d8e2f2;
+  white-space: nowrap;
+}
+
+.course-name {
+  margin: 0;
+  font-size: 46px;
+  font-weight: 300;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+.course-name .amp {
+  color: #f76900;
+  font-weight: 400;
+}
+
+.course-term {
+  margin: 16px 0 0;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: #b8c4dc;
+}
+
+@media (max-width: 700px) {
+  .bs-docs-header {
+    padding: 40px 16px 44px;
+    min-height: 0;
+  }
+  .course-name {
+    font-size: 32px;
+  }
+  .course-numbers li {
+    font-size: 11px;
+    padding: 3px 10px 4px;
+  }
+}
 
 /*# sourceMappingURL=main.css.map */
