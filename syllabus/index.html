@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Syllabus</title>
+  <meta name="description" content="CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University">
+
+  <!-- The stylesheet asks for Open Sans at weight 300 with bold emphasis, but the
+       family was never actually loaded, so every weight resolved to the same
+       fallback face and bold text rendered indistinguishable from body text. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://kmicinski.com/ai-security-course/css/main.css">
+  <link rel="canonical" href="https://kmicinski.com/ai-security-course/syllabus/">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+</head>
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="https://kmicinski.com/ai-security-course/">CIS400</a>
+
+    <nav class="navbar navbar-expand navbar-light bg-light">
+      <div class="container-fluid">
+    <div class="navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/#schedule">Schedule</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/syllabus">Syllabus</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/resources">Resources</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+
+  </div>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <h1 id="introduction-to-ai-for-cybersecurity">Introduction to AI for Cybersecurity</h1>
+
+<p><strong>CIS 400 / CIS 600 / CSE 400 / CSE 691 · Syracuse University · Fall 2026</strong>
+<strong>Tu/Th 5:00–6:20 PM · CST 4-201 · Aug. 25 – Dec. 8, 2026</strong>
+<strong>Instructor:</strong> Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>) · Phone 940-399-8924</p>
+
+<div class="callout-legend" style="display:block;border-left:4px solid #F76900;background:#fff7f0;border-radius:6px;padding:0.8em 1.1em;margin:1.2em 0;">
+📄 <strong>The <a href="/ai-security-course/assets/syllabus-aug-22.pdf">official PDF syllabus</a> will always be kept up to date.</strong>
+We attempt to keep this web page synchronized with it and try to keep it up to date as the
+course evolves; but if the two ever disagree, <strong>the PDF governs</strong>.
+<br /><em>Last synchronized with the PDF: <strong>August 22, 2026</strong>.</em>
+<br /><a href="/ai-security-course/assets/syllabus-aug-22.pdf">⬇ Download the full syllabus (PDF)</a>
+</div>
+
+<h2 id="office-hours">Office Hours</h2>
+
+<p>Office hours are currently by appointment–my office is currently
+being set up in the new AI institute at Syracuse University, and I am
+planning to move in during early September. I will announce when I am
+ready to meet in the office. For now, please meet with me via Zoom or
+after class. If there are emergent concerns, we can arrange an
+in-person meeting, please email and we can set it up.</p>
+
+<h2 id="course-description">Course description</h2>
+
+<p>This course rigorously studies the impact of emerging AI systems on the
+principles and practices of cybersecurity. Topics include AI-assisted exploit
+generation and code auditing, autonomous social-engineering attacks, and
+AI-driven defense strategies such as automated intrusion detection and adaptive
+threat response. A recurring theme is that most of these vulnerabilities are the
+same classical failure to separate <strong>control from data</strong>, and that every
+offensive capability has a defensive mirror. <strong>Additional work is required for
+graduate students</strong> (CIS 600 / CSE 691).</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p><strong>CIS 351 and CSE 484</strong> (these may also be taken as co-requisites). The CSE 484
+requirement may be waived with instructor permission. Comfort with C, a scripting
+language, and basic systems concepts is assumed. <strong>No prior machine-learning
+background is required.</strong></p>
+
+<h2 id="audience">Audience</h2>
+
+<p>Students matriculated in the Computer Science BS, Computer Engineering BS, or AI
+Science BS. The graduate sections (CIS 600 / CSE 691) are open to MS and PhD
+students in Computer Science, Computer Engineering, AI Science, and
+Cybersecurity. Senior undergraduates and MS students are the primary audience.
+<strong>Credits:</strong> 3. <strong>Course fees/costs:</strong> none.</p>
+
+<h2 id="learning-objectives">Learning objectives</h2>
+
+<ol>
+  <li>Explain how AI systems can be used to both strengthen and undermine
+cybersecurity defenses.</li>
+  <li>Analyze the capabilities and limitations of AI-based approaches to
+vulnerability detection and threat analysis.</li>
+  <li>Evaluate the risks that AI poses to existing security models and practices.</li>
+  <li>Apply AI techniques to solve practical cybersecurity problems.</li>
+  <li>Assess the ethical and policy implications of deploying AI in security
+contexts.</li>
+  <li>Present findings on AI-cybersecurity topics through written analysis and
+project-based work.</li>
+</ol>
+
+<p><em>Undergraduate shared-competency tag: Information Literacy &amp; Technological
+Agility.</em></p>
+
+<h2 id="texts">Texts</h2>
+
+<p><strong>No required text.</strong> The following are optional references:</p>
+
+<ul>
+  <li>Ross Anderson, <em>Security Engineering: A Guide to Building Dependable
+Distributed Systems</em>, 3rd ed., Wiley, 2020.</li>
+  <li>Anthony D. Joseph, Blaine Nelson, Benjamin I. P. Rubinstein &amp; J. D. Tygar,
+<em>Adversarial Machine Learning</em>, Cambridge University Press, 2019.</li>
+  <li>Edward Raff, <em>Inside Deep Learning: Math, Algorithms, Models</em>, Manning, 2022.</li>
+  <li>Gareth James et al., <em>An Introduction to Statistical Learning: With
+Applications in Python</em>, Springer, 2023.</li>
+</ul>
+
+<p>Assigned papers and readings are listed on the
+<a href="/ai-security-course/#schedule">schedule</a> and collected on the
+<a href="/ai-security-course/resources">resources</a> page.</p>
+
+<h2 id="course-requirements-and-expectations">Course requirements and expectations</h2>
+
+<ul>
+  <li><strong>Class project.</strong> A course project carried out over the <strong>last six weeks</strong> of
+the semester, alone or in a group (maximum three per group; higher expectations
+for larger groups). It is presented during the last two weeks of class.
+<em>(Graduate projects engage at a higher level, applying concepts from
+state-of-the-art research.)</em></li>
+  <li><strong>Presentation.</strong> Students are divided into groups and assigned a <strong>research
+paper presentation</strong>. On the site’s operational schedule these run as short
+student research presentations that open a marked session most weeks.</li>
+  <li><strong>Weekly notes &amp; reflections.</strong> Students take detailed notes and write a
+weekly <strong>reflection</strong> on the week’s material, graded by the instructor. Due
+<strong>Friday at 11:59 PM</strong> (subject to change with notice); the two lowest
+reflection grades are dropped.</li>
+  <li><strong>Homework.</strong> Roughly <strong>four problem sets</strong>, including practice exam questions.
+Grading is <strong>completion-based</strong>, and solutions are provided well ahead of the
+exams. <em>(Graduate homework also includes problems drawn from research papers.)</em></li>
+  <li><strong>Participation.</strong> In-class engagement — attending lecture, and discussing
+readings and papers (including our discussion days and guest lectures) — is
+graded.</li>
+  <li><strong>Exams.</strong> <strong>Three in-class written exams plus an optional cumulative final.</strong>
+The lowest of these four grades is dropped, so <strong>three exams count at 13⅓% each
+(40% total)</strong>; a student satisfied with their three exam grades may choose not
+to sit the final. Exam dates are announced in class and posted on the course
+site <strong>at least two weeks in advance</strong>. <em>(Graduate students take a distinct,
+more theoretical exam.)</em></li>
+</ul>
+
+<h2 id="grading">Grading</h2>
+
+<div class="two-col">
+<div class="col-left">
+<p><strong>CIS 400 / CSE 400</strong></p>
+<table>
+<tr><th>Component</th><th>Weight</th></tr>
+<tr><td>Class Project</td><td>25%</td></tr>
+<tr><td>Presentation</td><td>10%</td></tr>
+<tr><td>Weekly Notes / Reflection</td><td>10%</td></tr>
+<tr><td>Homework</td><td>10%</td></tr>
+<tr><td>Participation</td><td>5%</td></tr>
+<tr><td>Exams</td><td>40%</td></tr>
+</table>
+</div>
+<div class="col-right">
+<p><strong>CIS 600 / CSE 691</strong> (graduate)</p>
+<table>
+<tr><th>Component</th><th>Weight</th></tr>
+<tr><td>Class Project*</td><td>25%</td></tr>
+<tr><td>Presentation</td><td>10%</td></tr>
+<tr><td>Weekly Notes / Reflection</td><td>10%</td></tr>
+<tr><td>Homework**</td><td>10%</td></tr>
+<tr><td>Participation</td><td>5%</td></tr>
+<tr><td>Exams***</td><td>40%</td></tr>
+</table>
+</div>
+</div>
+
+<p style="font-size:0.85em;color:#555;">
+<strong>*</strong> Graduate projects are expected to engage at a higher level of
+intellectual merit, applying concepts from state-of-the-art research
+publications. &nbsp;
+<strong>**</strong> Graduate homework also includes problems drawn from research
+papers. &nbsp;
+<strong>***</strong> Graduate students are given a different exam with a higher
+bar for theoretical knowledge.
+</p>
+
+<p><strong>Grade scale (CIS 400 / CSE 400).</strong> A 93.0–100 · A− 90.0–92.9 · B+ 87.0–89.9 ·
+B 83.0–86.9 · B− 80.0–82.9 · C+ 75.0–79.9 · C 70.0–74.9 · C− 60.0–69.9 ·
+D 50.0–59.9 · F &lt;50.
+<em>(Graduate sections CIS 600 / CSE 691 use the same scale but <strong>do not award D</strong>;
+the passing floor is F &lt;60.)</em></p>
+
+<h2 id="course-specific-policies">Course-specific policies</h2>
+
+<p><strong>Course website and communication.</strong> Course materials, assignment write-ups, and
+announcements are posted on the course site. Email
+(<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>) is the official channel
+for individual questions; please allow up to two business days for a reply, and
+expect longer response times on weekends.</p>
+
+<p><strong>Late work.</strong> Weekly reflections are due Friday at 11:59 PM and are <strong>not
+accepted late</strong>, since they are tied to that week’s material; the two lowest
+reflection grades are dropped to accommodate ordinary conflicts. <strong>Projects and
+problem sets may be submitted up to 48 hours late with a 10% penalty.</strong>
+Extensions beyond this require advance arrangement with the instructor, and
+accommodations arranged through the Center for Disability Resources or Student
+Outreach and Support are honored without penalty.</p>
+
+<p><strong>Authorized use of security tools and techniques.</strong> This course teaches
+offensive techniques (binary exploitation, automated exploit generation,
+adversarial machine learning, prompt injection) for <strong>defensive and scholarly
+purposes</strong>. All hands-on work must be performed <strong>only</strong> against the targets,
+virtual machines, and infrastructure provided for the course, or against systems
+you own and are explicitly authorized to test. Using these techniques against
+Syracuse University systems, other students’ machines, or any third-party system
+without written authorization is prohibited, may violate the Syracuse University
+Information Technology Resources Acceptable Use Policy and state and federal law,
+and will be referred for disciplinary action.</p>
+
+<p><strong>Relationship to CSE 643.</strong> Buffer overflows and related memory-safety attacks
+are also covered in CSE 643 (Computer Security). The treatment in the two courses
+is complementary: CSE 643 approaches the topic through the SEED Labs hands-on
+exercises, while this course focuses on AI-assisted discovery and exploitation of
+such vulnerabilities. Students may take both courses.</p>
+
+<p><strong>Attendance and electronics.</strong> Attendance is expected (see the University
+Attendance Policy) and participation is graded. Laptops and tablets are welcome
+for coursework; please keep them to course-related use during lecture and
+discussion.</p>
+
+<h2 id="use-of-ai">Use of AI</h2>
+
+<p><strong>Students.</strong> AI is permitted on the <strong>course project</strong> and <strong>homework</strong> (with
+attribution). See each assignment’s instructions for which tools are permitted,
+to what extent, and the citation requirements. <strong>If no instructions are provided
+for a specific assignment, no use of any AI tool is permitted.</strong> Any AI use
+beyond what a course assignment details is explicitly prohibited except when
+documented permission is granted.</p>
+
+<p><strong>Instructor.</strong> The instructor has used AI to generate portions of the course
+material — specifically, AI coding agents to help develop the website and
+interactive teaching-focused applications, and generative AI to help edit
+portions of the class slides and notes. In all cases the instructor takes full
+responsibility for the correctness and relevance of all material used in this
+class.</p>
+
+<h2 id="university-policies-and-services">University policies and services</h2>
+
+<p>Syracuse University policies and services on attendance, religious observances,
+Orange Success 2.0 progress reports, student mental health, disability-related
+accommodations (CDR), academic integrity, the student academic work policy,
+discrimination and Title IX, and email as official communication all apply to
+this course and are reproduced in full in the
+<a href="/ai-security-course/assets/syllabus-aug-22.pdf">official PDF syllabus</a>. See also the
+<a href="https://policies.syracuse.edu/">Syracuse University Policies</a> site and the Center
+for Disability Resources
+(<a href="https://disabilityresources.syr.edu/">disabilityresources.syr.edu</a>) — contact
+CDR as early as possible, since accommodations are generally not applied
+retroactively.</p>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <!-- <h2 class="footer-heading">CIS400</h2> -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>CIS400</li>
+          <li><a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

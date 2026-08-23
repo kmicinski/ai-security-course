@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>CIS400</title>
+  <meta name="description" content="CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University">
+
+  <!-- The stylesheet asks for Open Sans at weight 300 with bold emphasis, but the
+       family was never actually loaded, so every weight resolved to the same
+       fallback face and bold text rendered indistinguishable from body text. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://kmicinski.com/ai-security-course/css/main.css">
+  <link rel="canonical" href="https://kmicinski.com/ai-security-course/">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="https://kmicinski.com/ai-security-course/">CIS400</a>
+
+    <nav class="navbar navbar-expand navbar-light bg-light">
+      <div class="container-fluid">
+    <div class="navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/#schedule">Schedule</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/syllabus">Syllabus</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/resources">Resources</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+
+  </div>
+</header>
+
+
+    <div class="masthead">
+      <div class="bs-docs-masthead" >
+        <div class="bs-docs-header">
+          <div class="container">
+            <div class="wrapper">
+              <div class="introtext">
+                <h1 class="compsecurity">CIS 400 / CIS 600 / CSE 400 / CSE 691 &mdash; Fall 2026</h1>
+                <h2 class="compsecurity">Cybersecurity <span class="amp">&amp;</span> Artificial Intelligence</h2>
+                
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+      
+    <div class="page-content">
+      <div class="wrapper">
+        <div id="course-intro">
+
+  <p><strong>CIS 400 / CIS 600 / CSE 400 / CSE 691 — Cybersecurity &amp; AI.</strong> How emerging AI systems change the
+practice of security, in both directions: AI as a tool for attack and defense,
+and attacks on AI systems themselves. We study classical foundations
+(reverse engineering, memory attacks, automated exploit generation) and build up to 
+the state of the art (AI agents for vulnerability discovery, adversarial ML, prompt
+injection, jailbreaking, and LLM/agent escapes). Because this class discusses a rapidly-emerging
+area, content will be adjusted on-demand to emergent concerns.</p>
+
+  <p><strong>Meetings:</strong> Tu/Th 5:00–6:20 PM · CST 4-201 · Aug. 25 – Dec. 8, 2026 ·
+Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). See the
+<a href="/ai-security-course/syllabus">syllabus</a> (or the
+<a href="/ai-security-course/assets/syllabus-aug-22.pdf">official PDF</a>) for official course policies and grading.</p>
+
+  <div class="callout-legend">
+  <span><i class="fa-solid fa-chalkboard-user lecture-icon"></i> Lecture</span>
+  <span><i class="fa-solid fa-comments discussion-icon"></i> Discussion day</span>
+  <span><i class="fa-solid fa-microphone-lines guest-icon"></i> Guest lecture</span>
+  <span><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Research presentation</span>
+  <span><i class="fa-solid fa-file-pen exam-icon"></i> Exam</span>
+  <span><i class="fa-solid fa-folder-open project-icon"></i> Project / HW</span>
+</div>
+
+  <p class="schedule-note"><em>Slides, notes, and assignments are posted as we reach each topic.</em></p>
+
+</div>
+
+<h2 id="schedule" class="schedule-title"><i class="fa-solid fa-calendar-days"></i> Schedule</h2>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 1 &middot; Foundations of Security</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">8/25</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Course Introduction &amp; the Security + AI Landscape
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-display notes-icon"></i>
+            <a href="/ai-security-course/slides/01-course-intro/">Slides</a></li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">8/27</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Security Foundations: CIA, Threat Modeling, Information Flow <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i>
+            Anderson, <em>Security Engineering</em>, Ch. 1</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i>
+            Bell &amp; LaPadula (1973)</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 2 &middot; ML Background &amp; the AI Threat Surface</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">9/1</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Machine Learning Background: Regression, Classification, Evaluation <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-flask"></i> Linear and logistic regression, GLMs, overfitting, base rates</li>
+          
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">9/3</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          LLM Intro: Next-Token Prediction, Training, and Tool Use <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-flask"></i> What a language model is, and what an agent is</li>
+          
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 3 &middot; Reverse Engineering &amp; Memory Attacks</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">9/8</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Reverse Engineering I: Binary Analysis &amp; AI-Assisted Decompilation <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-flask"></i> Hands-on: Ghidra</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Aleph One, "Smashing the Stack for Fun and Profit" (Phrack 49, 1996)</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Shoshitaishvili et al., "SoK: The Art of War" (I&ndash;IV)</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">9/10</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Reverse Engineering II: Stacks, Buffer Overflows, ROP <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #1 &mdash; Shacham, "The Geometry of Innocent Flesh on the Bone" (ROP)</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 4 &middot; Mitigations &amp; AI-Assisted Exploitation</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">9/15</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Exploit Primitives &amp; Mitigations: ASLR, DEP/NX, Canaries, CFI <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Anderson, Ch. 4 (Access Control)</li>
+          
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">9/17</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          AI-Assisted Exploitation: Can a Model Write the Exploit? <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #2</li>
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Fang et al. (2024) + critiques</li>
+        </ul>
+        <ul class="resources-inline">
+          
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 5 &middot; Automated Exploit Generation</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">9/22</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Automated Exploit Generation I: Symbolic Execution &amp; Constraint Solving <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> KLEE (OSDI '08); AEG (NDSS '11)</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">9/24</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Automated Exploit Generation II: LLM-Guided Fuzzing &amp; the Bug&rarr;Exploit Gap <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #3</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Cha et al., Mayhem (S&amp;P '12)</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 6 &middot; AI Agents for Vulnerability Discovery &amp; Code Understanding</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">9/29</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Agent-Computer Interfaces, Cyber-Reasoning Systems, DARPA AIxCC <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Yang et al., SWE-agent (2024)</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">10/1</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          AI Agents for Code Understanding &amp; Auditing at Scale <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #4</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Xu et al., "When LLMs Meet Cybersecurity" (2025)</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 7 &middot; Exam 1</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">10/6</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Exam 1 Review <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          
+          <li><i class="fa-solid fa-flask"></i> Worked problems from Weeks 1&ndash;6; bring questions</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">10/8</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-file-pen exam-icon"></i>
+          Exam 1 (in class)
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-triangle-exclamation deadline-icon"></i> Focus topics TBA</li>
+          
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 8 &middot; Fall Break; Deep Learning &amp; Adversarial ML <span class="tbd">(guest)</span></h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">10/13</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-mug-hot reading-icon"></i>
+          Fall Break &mdash; no class
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-triangle-exclamation deadline-icon"></i> University Fall Break, Mon 10/12 &ndash; Tue 10/13</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">10/15</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-microphone-lines guest-icon"></i>
+          Deep Neural Networks and Adversarial Machine Learning <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-microphone-lines guest-icon"></i> <strong>Guest lecture: Ed&nbsp;Raff</strong> &mdash; author of <em>Inside Deep Learning</em></li>
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #5</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 9 &middot; AI &amp; Network Security: Detection and Evasion</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">10/20</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          ML-Based Intrusion Detection: Traffic Analysis &amp; Feature Engineering <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Mirsky et al., Kitsune (NDSS '18); Anderson, Ch. 21</li>
+          
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">10/22</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Adversarial Evasion (FGSM, PGD) &amp; Defenses <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #6</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Goodfellow et al. (2015); Carlini &amp; Wagner (2017)</li>
+          
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 10 &middot; AI-Powered Social Engineering &amp; Exam 2</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">10/27</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          LLM Phishing, Voice Cloning &amp; Deepfakes &mdash; and Defending Against Them <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Schmitt &amp; Flechais (2024)</li>
+          <li><i class="fa-solid fa-flask"></i> Human detection rates; provenance and out-of-band verification</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">10/29</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-file-pen exam-icon"></i>
+          Exam 2 (in class)
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-triangle-exclamation deadline-icon"></i> Focus topics TBA</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 11 &middot; Prompt Injection &amp; Jailbreaking</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">11/3</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Prompt Injection: Direct vs. Indirect &mdash; the Control/Data Collapse <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Greshake et al. (2023)</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">11/5</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Jailbreaking: Taxonomies, Universal/Transferable Attacks, Why Defenses Fail <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #7</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Zou et al., GCG (2023)</li>
+          
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 12 &middot; LLM &amp; Agent Escapes</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">11/10</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Agent Escapes: Tool-Use Breakout, Code Execution, Exfiltration, MCP Risk <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-triangle-exclamation deadline-icon"></i> Emerging-attacks module</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Panfilov et al., <a href="https://stolen-thoughts.com/">"Stealing Reasoning Traces"</a> (2026)</li>
+          
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">11/12</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Self-Propagating Attacks &amp; AI Worms; Poisoning &amp; the Model Supply Chain <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #8</li>
+          
+        </ul>
+        <ul class="resources-inline">
+          
+          
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 13 &middot; Securing AI Systems &amp; Red-Teaming</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">11/17</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Threat-Modeling LLM Apps: Trust Boundaries, Tool-Use Risk, Exfiltration <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> OWASP Top 10 for LLM Applications (2025)</li>
+          <li><i class="fa-solid fa-folder-open project-icon"></i> HW4 assigned <span class="tbd">(write-up TBA)</span></li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">11/19</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Adaptive Attacks &amp; Building an Evaluation Harness <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #9 <span class="tbd">(final slot)</span></li>
+          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Nasr, Carlini, et al. (2025), revisited</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header break-header">
+  <h2><i class="fa-solid fa-mug-hot"></i> Thanksgiving Break &middot; 11/22&ndash;11/29 &middot; no class</h2>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 14 &middot; Ethics, Policy &amp; Exam 3</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">12/1</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Policy, Ethics, Disclosure &amp; the Law: Dual-Use, CFAA, Responsible Disclosure <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">12/3</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-file-pen exam-icon"></i>
+          Exam 3 (in class)
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-triangle-exclamation deadline-icon"></i> Focus topics TBA</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 15 &middot; Class Project Presentations</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">12/8</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-person-chalkboard presentation-icon"></i>
+          Class Project Presentations <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          
+          
+          <li><i class="fa-solid fa-mug-hot reading-icon"></i> Last day of classes</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">Finals</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-file-pen exam-icon"></i>
+          Optional Final Exam
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-triangle-exclamation deadline-icon"></i> Final-exam period (Dec 10&ndash;15)</li>
+          <li><i class="fa-solid fa-file-pen exam-icon"></i> Cumulative and <strong>optional</strong> &mdash; replaces your lowest midterm; skip it if you are satisfied with the three</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <!-- <h2 class="footer-heading">CIS400</h2> -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>CIS400</li>
+          <li><a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

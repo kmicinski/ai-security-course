@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Resources</title>
+  <meta name="description" content="CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University">
+
+  <!-- The stylesheet asks for Open Sans at weight 300 with bold emphasis, but the
+       family was never actually loaded, so every weight resolved to the same
+       fallback face and bold text rendered indistinguishable from body text. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://kmicinski.com/ai-security-course/css/main.css">
+  <link rel="canonical" href="https://kmicinski.com/ai-security-course/resources/">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+</head>
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="https://kmicinski.com/ai-security-course/">CIS400</a>
+
+    <nav class="navbar navbar-expand navbar-light bg-light">
+      <div class="container-fluid">
+    <div class="navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/#schedule">Schedule</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/syllabus">Syllabus</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://kmicinski.com/ai-security-course/resources">Resources</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+
+  </div>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <h1 id="resources">Resources</h1>
+
+<p>Readings, tools, and references for CIS400. Assigned readings appear on the
+<a href="/ai-security-course/#schedule">schedule</a> next to their session;
+this page collects everything in one place. <em>(Draft — citations will be
+finalized, and several arXiv items may have newer versions by Fall 2026.)</em></p>
+
+<h2 id="books">Books</h2>
+
+<ul>
+  <li><strong>Ross Anderson</strong>, <em>Security Engineering</em>, 3rd ed. (Wiley, 2020). Chapters 1
+(What is Security Engineering?), 4 (Access Control), and 21 (Network Attack
+and Defense). <a href="https://www.cl.cam.ac.uk/~rja14/book.html">Author’s free copy</a>.</li>
+  <li><strong>Florian Tramèr et al.</strong>, <em>Adversarial Machine Learning</em> (Cambridge, 2024).</li>
+</ul>
+
+<h2 id="foundations--classical-offense">Foundations &amp; classical offense</h2>
+
+<ul>
+  <li>Bell &amp; LaPadula, “Secure Computer Systems: Mathematical Foundations” (MITRE,
+1973).</li>
+  <li>Shoshitaishvili et al., “SoK: (State of) The Art of War: Offensive Techniques
+in Binary Analysis” (IEEE S&amp;P, 2016).</li>
+  <li>Aleph One, “Smashing the Stack for Fun and Profit” (<em>Phrack</em> 49, 1996).</li>
+  <li>Shacham, “The Geometry of Innocent Flesh on the Bone: Return-into-libc without
+Function Calls” (ACM CCS, 2007).</li>
+</ul>
+
+<h2 id="automated-exploit-generation">Automated exploit generation</h2>
+
+<ul>
+  <li>Cadar, Dunbar &amp; Engler, “KLEE: Unassisted and Automatic Generation of
+High-Coverage Tests…” (OSDI, 2008).</li>
+  <li>Avgerinos et al., “AEG: Automatic Exploit Generation” (NDSS, 2011).</li>
+  <li>Cha et al., “Unleashing Mayhem on Binary Code” (IEEE S&amp;P, 2012).</li>
+</ul>
+
+<h2 id="ai-agents-for-security">AI agents for security</h2>
+
+<ul>
+  <li>Yang et al., “SWE-agent: Agent-Computer Interfaces Enable Automated Software
+Engineering” (arXiv:2405.15793, 2024).</li>
+  <li>Fang et al., “LLM Agents Can Autonomously Exploit One-Day Vulnerabilities”
+(arXiv:2404.08144, 2024) — read alongside published critiques.</li>
+  <li>Xu et al., “When LLMs Meet Cybersecurity: A Systematic Literature Review”
+(<em>Cybersecurity</em>, Springer, 2025).</li>
+  <li>Sheng et al., “LLMs in Software Security: A Survey of Vulnerability Detection
+Techniques and Insights” (<em>ACM Computing Surveys</em>, 2025).</li>
+</ul>
+
+<h2 id="adversarial-ml--network-defense">Adversarial ML &amp; network defense</h2>
+
+<ul>
+  <li>Mirsky et al., “Kitsune: An Ensemble of Autoencoders for Online Network
+Intrusion Detection” (NDSS, 2018).</li>
+  <li>Goodfellow, Shlens &amp; Szegedy, “Explaining and Harnessing Adversarial Examples”
+(ICLR, 2015).</li>
+  <li>Carlini &amp; Wagner, “Towards Evaluating the Robustness of Neural Networks” (IEEE
+S&amp;P, 2017).</li>
+</ul>
+
+<h2 id="social-engineering">Social engineering</h2>
+
+<ul>
+  <li>Schmitt &amp; Flechais, “Digital Deception: Generative Artificial Intelligence in
+Social Engineering and Phishing” (<em>AI Review</em>, Springer, 2024).</li>
+</ul>
+
+<h2 id="attacks-on-ai-systems">Attacks on AI systems</h2>
+
+<ul>
+  <li>Greshake et al., “Not What You’ve Signed Up For: Compromising Real-World
+LLM-Integrated Applications with Indirect Prompt Injection” (AISec @ CCS,
+2023).</li>
+  <li>Zou et al., “Universal and Transferable Adversarial Attacks on Aligned
+Language Models” (arXiv:2307.15043, 2023).</li>
+  <li>OWASP, “Top 10 for LLM Applications” (2025 edition).</li>
+  <li>Nasr, Carlini, Sitawarin, Schulhoff et al., “The Attacker Moves Second:
+Stronger Adaptive Attacks Bypass Defenses Against LLM Jailbreaks and Prompt
+Injections” (arXiv:2510.09023, 2025).</li>
+  <li>Panfilov, Schaeffer, Schmotz, Shumailov, Beurer-Kellner, Prabhu, Geiping &amp;
+Andriushchenko, “Stealing Reasoning Traces from Proprietary LLM APIs” (2026) —
+<a href="https://stolen-thoughts.com/">stolen-thoughts.com</a>. Encrypted client-side
+chain-of-thought blocks are portable across sessions, users, and sibling models;
+a “decryption jailbreak” turns a weaker model into an oracle that outputs a
+stronger model’s reasoning verbatim, enabling distillation, mass PII/credential
+extraction from public logs, hazard leakage past refusals, and invisible prompt
+injection. Case study in the LLM &amp; Agent Escapes deck (Week 12).</li>
+</ul>
+
+<h2 id="tools--environments">Tools &amp; environments</h2>
+
+<ul>
+  <li><strong>Ghidra</strong> — NSA’s open-source reverse-engineering suite.</li>
+  <li><strong>pwntools</strong> — CTF/exploit-development framework.</li>
+  <li><strong>angr</strong> — binary analysis &amp; symbolic execution.</li>
+  <li>Course <strong>sandbox / CTF range</strong> — details distributed in Week 1. All offensive
+work happens here, with authorization.</li>
+</ul>
+
+<h2 id="slides">Slides</h2>
+
+<p>Decks are linked from each session on the
+<a href="/ai-security-course/#schedule">schedule</a>, and go up as we reach
+each topic. In any deck, press <kbd>s</kbd> for speaker notes, <kbd>f</kbd> for
+fullscreen, and <kbd>Esc</kbd> for the slide overview.</p>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <!-- <h2 class="footer-heading">CIS400</h2> -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>CIS400</li>
+          <li><a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
