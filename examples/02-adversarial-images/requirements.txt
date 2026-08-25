@@ -1,0 +1,9 @@
+# For running the Gradio app locally (python app.py).
+#
+# The Colab notebook needs NONE of this: it runs on what Colab preinstalls.
+# The <6 cap is deliberate — app.py's custom theme, CSS, and modal rely on
+# Gradio 5 behavior that the 6.x line changed.
+gradio>=4.44,<6
+torch>=2.2
+torchvision>=0.17
+Pillow>=10
