@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Information Flow Challenge — CIS400/600</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div>
+      <span class="course">CIS400 / CIS600 — Cybersecurity &amp; AI · Lecture 2</span>
+      <h1>Information Flow: does this program leak?</h1>
+      <p class="sub">
+        Eight programs, three observers. For each one: decide what a public observer learns, then watch the
+        program run over its entire secret input space and compare your answer with Denning's type checker.
+      </p>
+    </div>
+    <div class="scorebox" id="score-wrap">
+      <div id="score"></div>
+      <button id="reset">reset answers</button>
+    </div>
+  </div>
+  <nav class="modes">
+    <button data-mode="batch">Batch<span class="num">3</span></button>
+    <button data-mode="stream">Streams<span class="num">3</span></button>
+    <button data-mode="timing">Timing<span class="num">2</span></button>
+  </nav>
+</header>
+
+<main id="app"></main>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

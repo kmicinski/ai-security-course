@@ -1,0 +1,6 @@
+# Extra packages needed only to run verify.py (the notebook execution harness).
+# Colab and the plain demo need none of this.
+nbclient>=0.9
+nbformat>=5.9
+ipykernel>=6.29
+matplotlib>=3.7

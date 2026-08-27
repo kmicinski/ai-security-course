@@ -31,3 +31,20 @@ The modules are the source of truth. After changing one, rebuild:
 python3 build_notebook.py           # regenerate
 python3 build_notebook.py --check   # fail if stale
 ```
+
+## Checking a change
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r dev-requirements.txt
+
+python3 verify.py            # notebook fresh + invariants + full execution (~10s)
+python3 verify.py --quick    # skip executing the notebook (~4s)
+```
+
+`verify.py` checks that the notebook matches its source, that the attacks obey
+the properties the notebook claims — epsilon = 0 is a no-op, PGD with one step
+of size epsilon *is* FGSM, the L-infinity budget survives a step size larger
+than epsilon, outputs stay in [0, 1] — and that every cell executes. Deleting
+the projection line from `pgd.py` makes it fail three budget checks, which is
+the point.

@@ -1,0 +1,86 @@
+<!doctype html>
+<!--
+  GENERATED FILE — do not edit by hand.
+  Regenerate with:  node ../../slides-infra/build.mjs <deck-dir>
+  Content lives in the sibling *.md files. Edit those, then rebuild.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>CIS400 — Foundations of Security</title>
+
+    <link rel="stylesheet" href="../../slides-infra/vendor/reveal/dist/reset.css" />
+    <link rel="stylesheet" href="../../slides-infra/vendor/reveal/dist/reveal.css" />
+    <link rel="stylesheet" href="../../slides-infra/css/theme.css" id="theme" />
+    <link rel="stylesheet" href="../../slides-infra/css/solarized-light.css" id="highlight-theme" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Math rendering (KaTeX). Source LaTeX between $...$ / $$...$$ is encoded
+         by build.mjs into <span class="ktx" data-tex="base64"> so the markdown
+         pass cannot mangle it; the hook below decodes and renders each span. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section
+          data-markdown="deck.gen.md"
+          data-separator="^\n---\n$"
+          data-separator-vertical="^\n--\n$"
+          data-separator-notes="^Note:"
+        ></section>
+      </div>
+    </div>
+
+    <script src="../../slides-infra/vendor/reveal/dist/reveal.js"></script>
+    <script src="../../slides-infra/vendor/reveal/plugin/markdown/markdown.js"></script>
+    <script src="../../slides-infra/vendor/reveal/plugin/highlight/highlight.js"></script>
+    <script src="../../slides-infra/vendor/reveal/plugin/notes/notes.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        slideNumber: "c/t",
+        controls: true,
+        progress: true,
+        history: true,
+        transition: "slide",
+        backgroundTransition: "fade",
+        width: 1280,
+        height: 800,
+        margin: 0.06,
+        minScale: 0.2,
+        maxScale: 2.0,
+        pdfSeparateFragments: false,
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+      });
+
+      // Decode the base64 <span class="ktx"> spans build.mjs emitted and render
+      // them with KaTeX, once the markdown slides are in the DOM.
+      function renderMath() {
+        if (typeof katex === "undefined") return;
+        document.querySelectorAll(".reveal .ktx:not([data-done])").forEach((el) => {
+          try {
+            const b = atob(el.getAttribute("data-tex"));
+            const tex = new TextDecoder().decode(Uint8Array.from(b, (c) => c.charCodeAt(0)));
+            katex.render(tex, el, { displayMode: el.dataset.d === "1", throwOnError: false });
+            el.setAttribute("data-done", "1");
+          } catch (e) {
+            /* leave the span; a decode/render failure should not break the deck */
+          }
+        });
+      }
+      Reveal.on("ready", renderMath);
+      // Fallback in case KaTeX's deferred script loads after "ready" fires.
+      window.addEventListener("load", renderMath);
+    </script>
+  </body>
+</html>
