@@ -79,9 +79,11 @@
     Weeks 10-11   -> language models entirely: tokens, attention, training,
                      agents. Nothing about them belongs in this deck.
     Weeks 12-14   -> attacks on AI systems, and defenses.
-  - The optional full-math reference decks (slides/03-ml-llm-crash-course and
-    slides/03b-ml-llm-details) and the interactive notes
-    (notes/03-ml-llm-crash-course) remain the deeper WRITTEN treatment:
+  - THIS deck's companion is notes/03-ml-background — interactive notes scoped
+    to exactly these slides and no further. Keep them in sync when you edit.
+    Separately, the optional full-math reference decks
+    (slides/03-ml-llm-crash-course and slides/03b-ml-llm-details) and their own
+    notes (notes/03-ml-llm-crash-course) remain the deeper WRITTEN treatment:
     matrix calculus, the backprop derivation, LLM internals. Point there. But
     a derivation MAY now live in this deck when it earns its place, but it has
     to fit on the slide. SLIDE BUDGET: 44, and vertical sub-slides are banned —
@@ -270,7 +272,7 @@ being a linear system. Nothing is left to *solve*, only something to
 
 <span class="ktx" data-tex="XGV0YQ=="></span> is the **learning rate**: too small it crawls, too large it **diverges**.
 
-<p class="source">From here on there is usually no formula at all.</p>
+<p class="source">From here on there is usually no formula at all. Push the learning rate past the divergence threshold yourself in the <a href="../../notes/03-ml-background/">interactive notes</a>.</p>
 
 Note:
 Answer last slide's question, then spend your time on Shape, not Scale. The

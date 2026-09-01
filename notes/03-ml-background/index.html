@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Lecture Notes — ML Introduction</title>
+  <meta name="description" content="CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University">
+
+  <!-- The stylesheet asks for Open Sans at weight 300 with bold emphasis, but the
+       family was never actually loaded, so every weight resolved to the same
+       fallback face and bold text rendered indistinguishable from body text. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://kmicinski.com/ai-security-course/css/main.css">
+  <link rel="canonical" href="https://kmicinski.com/ai-security-course/notes/03-ml-background/">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+</head>
+
+  <body>
+
+    <header class="site-header">
+  <div class="wrapper site-header__inner">
+
+    <a class="site-title" href="/ai-security-course/">
+      <span class="site-title__id">CIS 400</span>
+      <span class="site-title__sep">/</span>
+      <span class="site-title__name">Cybersecurity &amp; AI</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-link"
+         href="/ai-security-course/#schedule">Schedule</a>
+      <a class="nav-link"
+         href="/ai-security-course/syllabus">Syllabus</a>
+      <a class="nav-link"
+         href="/ai-security-course/resources">Resources</a>
+    </nav>
+
+  </div>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <!--
+  Interactive lecture notes for Week 2, deck 03-ml-background ("ML Introduction").
+  This is a raw-HTML Jekyll page (NOT markdown) so that KaTeX math and the inline
+  JS widgets are never mangled by kramdown. Math is written between $ ... $ and
+  $$ ... $$ and rendered client-side by KaTeX auto-render (CDN, loaded at the
+  bottom). All six widgets are self-contained vanilla JS in the single script
+  block at the end; no external JS beyond KaTeX, no network calls.
+
+  SCOPE RULE: this page follows slides/03-ml-background/deck.md and goes no
+  further than it. No tokenization, attention, transformers, language models,
+  backpropagation, or training dynamics — those belong to Week 8 and to
+  Weeks 10-11. The deeper written treatment stays in notes/03-ml-llm-crash-course,
+  which is the companion to a different deck and is not edited from here.
+
+  Every number on this page is either quoted from the deck or recomputed by the
+  page itself. The held-out feature table used by the threshold widget is the
+  real 1,116-message test split (SEED = 400) of the lab corpus, exported once
+  and hard-coded so nothing is fetched at runtime.
+-->
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<style>
+  .notes-wrap { max-width: 860px; margin: 0 auto; font-size: 1.02rem; line-height: 1.6; }
+  .notes-wrap h1 { color: #000E54; margin-top: 0.5em; }
+  .notes-wrap h2 { color: #000E54; border-bottom: 3px solid #F76900; padding-bottom: 0.2em; margin-top: 2.2em; }
+  .notes-wrap h3 { color: #000E54; margin-top: 1.6em; }
+  .notes-wrap pre { background: #f6f5f0; border: 1px solid #e2e0d8; border-radius: 6px; padding: 0.8em 1em; overflow-x: auto; font-size: 0.85em; line-height: 1.45; }
+  .notes-wrap code { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+  .notes-wrap p > code, .notes-wrap li > code, .notes-wrap td > code { background: #f2f1ec; padding: 0.08em 0.3em; border-radius: 4px; font-size: 0.88em; }
+  .notes-wrap table { border-collapse: collapse; margin: 1em 0; font-size: 0.92em; }
+  .notes-wrap table th, .notes-wrap table td { border: 1px solid #ddd; padding: 0.3em 0.7em; text-align: left; }
+  .notes-wrap table th { background: #f6f8ff; }
+  .co { border-left: 4px solid; border-radius: 4px; padding: 0.6em 0.9em; margin: 1em 0; background: #fafafa; }
+  .co.threat  { border-color: #c0392b; background: #fdf3f2; }
+  .co.defense { border-color: #1e824c; background: #f1f9f4; }
+  .co.note    { border-color: #0AA6B7; background: #f0fafb; }
+  .widget { border: 2px solid #000E54; border-radius: 10px; padding: 1em 1.2em 1.2em; margin: 1.4em 0; background: #fcfcff; }
+  .widget h4 { margin: 0 0 0.2em; color: #F76900; font-size: 1.02em; }
+  .widget .whint { color: #667; font-size: 0.85em; margin: 0 0 0.7em; }
+  .widget label { font-size: 0.9em; margin-right: 0.9em; white-space: nowrap; }
+  .widget input[type=range] { vertical-align: middle; width: 160px; accent-color: #F76900; }
+  .widget input[type=text] { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; padding: 0.15em 0.35em; border: 1px solid #bbb; border-radius: 4px; }
+  .widget select { font-size: 0.9em; padding: 0.1em 0.25em; border: 1px solid #bbb; border-radius: 4px; }
+  .widget button { background: #000E54; color: #fff; border: 0; border-radius: 5px; padding: 0.3em 0.9em; font-size: 0.88em; cursor: pointer; margin-right: 0.5em; }
+  .widget button:hover { background: #F76900; }
+  .widget .wout { font-family: ui-monospace, Menlo, monospace; font-size: 0.85em; background: #f6f5f0; border-radius: 5px; padding: 0.5em 0.8em; margin-top: 0.7em; white-space: pre-wrap; }
+  .widget svg { max-width: 100%; height: auto; display: block; margin-top: 0.5em; }
+  .widget table { font-size: 0.85em; border-collapse: collapse; margin-top: 0.6em; }
+  .widget table td, .widget table th { border: 1px solid #ddd; padding: 0.2em 0.55em; font-family: ui-monospace, Menlo, monospace; }
+  .bar-row { display: flex; align-items: center; gap: 0.5em; margin: 0.15em 0; font-family: ui-monospace, Menlo, monospace; font-size: 0.82em; }
+  .bar-row .blab { width: 6.5em; text-align: right; }
+  .bar-row .btrack { flex: 1; background: #eee; border-radius: 3px; height: 14px; position: relative; }
+  .bar-row .bfill { height: 100%; border-radius: 3px; background: #0AA6B7; }
+  .bar-row .bfill.cut { background: #ccc; }
+  .bar-row .bval { width: 5.5em; }
+  .toc { background: #f6f8ff; border: 1px solid #dfe4f5; border-radius: 8px; padding: 0.8em 1.4em; }
+  .toc a { text-decoration: none; }
+  .notes-wrap .srcline { color: #777; font-size: 0.83em; }
+</style>
+
+<div class="notes-wrap">
+
+<h1>ML Introduction</h1>
+
+<p><strong>CIS 400/600 · Week 2 · companion to the
+<a href="/ai-security-course/slides/03-ml-background/">ML Introduction</a>
+deck.</strong> These notes walk the same ladder the lecture walks, in the same
+order, at reading speed, with six widgets in the places where a slide could
+only show you the answer. One corpus runs through all of it: the UCI SMS Spam
+Collection, 5,574 real messages, 747 spam, split with <code>SEED = 400</code>
+into 4,458 training and 1,116 held-out. It is the same corpus and the same
+split the paired lab uses. Every figure below is either quoted from a slide
+or recomputed in your browser by the page itself; the widgets are plain
+JavaScript, and the source is in this file.</p>
+
+<div class="co note">This page stops where the lecture stops. It builds
+networks, collapses them, and counts their parameters; it never trains one.
+How the weights are actually found is backpropagation, in Week 8.</div>
+
+<div class="toc">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#s1">What learning is</a> <span class="srcline">(slides 2–4)</span></li>
+  <li><a href="#s2">The normal equations</a> <span class="srcline">(5–6)</span></li>
+  <li><a href="#s3">Why we iterate anyway</a> <span class="srcline">(7)</span></li>
+  <li><a href="#s4">Classification by regression</a> <span class="srcline">(8–11)</span></li>
+  <li><a href="#s5">Logistic regression</a> <span class="srcline">(12–15)</span></li>
+  <li><a href="#s6">Softmax and cross-entropy</a> <span class="srcline">(16–17)</span></li>
+  <li><a href="#s7">Where <em>x</em> comes from</a> <span class="srcline">(18–20)</span></li>
+  <li><a href="#s8">Measuring honestly</a> <span class="srcline">(21–23)</span></li>
+  <li><a href="#s9">Past the linear wall</a> <span class="srcline">(24–28)</span></li>
+  <li><a href="#s10">Today in one screen</a> <span class="srcline">(29)</span></li>
+</ol>
+</div>
+
+<h2 id="s1">1 · What learning is</h2>
+<p class="srcline">Deck slides 2–4.</p>
+
+<p>Supervised learning starts with examples of inputs and the answers we
+wanted,</p>
+
+$$ (x_1, y_1),\ (x_2, y_2),\ \dots,\ (x_n, y_n), $$
+
+<p>and asks for a function $f_\theta$ with $f_\theta(x) \approx y$ on
+<em>future</em> inputs. The input $x$ is an email, a network packet, a house's
+square footage. The answer $y$ is spam or not, attack or benign, the sale
+price. And $\theta$ is the knobs we get to turn — the settings of the knobs
+are the model.</p>
+
+<p>The word doing the work is "future". Memorizing the examples is trivial and
+proves nothing; the whole game is inputs you have not seen, and that gap is
+where overfitting and attackers both live.</p>
+
+<h3>The simplest model</h3>
+
+<p>Predict a number as a weighted sum of the features plus an offset:</p>
+
+$$ \hat{y} = w_1 x_1 + w_2 x_2 + \cdots + w_d x_d + b. $$
+
+<p>With one feature this is $\hat{y} = wx + b$, a line, and the knobs are the
+slope and the intercept. On the 4,458 training messages, predicting word count
+from character length, least squares picks $\hat{y} = 0.197x + 0.67$ with
+$R^2 = 0.96$; the eyeballed line of slope $0.30$ on the same slide has 19
+times the squared error. Small as this family is, a large share of deployed
+security ML is a linear model over hand-built features, because it is fast and
+auditable.</p>
+
+<h3>The loss</h3>
+
+<p>Score one prediction with the squared error, and a whole candidate model by
+its average over the examples:</p>
+
+$$ \text{loss for one example} = (\hat{y} - y)^2, \qquad \text{total} = \frac{1}{n}\sum_{i=1}^{n} \left(f_\theta(x_i) - y_i\right)^2. $$
+
+<p>Training is the search for the knob settings with the lowest total loss.
+The loss is what turns "which model is better" into a number, and a number is
+something you can search.</p>
+
+<div class="co note">The loss is a design choice, and it encodes what you want.
+Squared error says big misses hurt disproportionately. Whoever picks the loss
+picks what the model cares about, which is a design lever now and a security
+lever later in the course.</div>
+
+<h2 id="s2">2 · The normal equations</h2>
+<p class="srcline">Deck slides 5–6.</p>
+
+<p>Take three points, $(1,2)$, $(2,4)$, $(3,5)$. Stack one row per example,
+with a column of ones so the bias is just the weight on a feature that never
+varies:</p>
+
+$$ \underbrace{\begin{bmatrix} 1 & 1 \\ 2 & 1 \\ 3 & 1 \end{bmatrix}}_{X}\; \underbrace{\begin{bmatrix} w \\ b \end{bmatrix}}_{\text{parameters}} \;=\; \begin{bmatrix} w + b \\ 2w + b \\ 3w + b \end{bmatrix} \quad\text{should land near}\quad \underbrace{\begin{bmatrix} 2 \\ 4 \\ 5 \end{bmatrix}}_{y} $$
+
+<p>Write the total squared error and expand it:</p>
+
+$$ L(w) \;=\; \lVert Xw - y \rVert^2 \;=\; w^\top X^\top X w \;-\; 2\,w^\top X^\top y \;+\; y^\top y. $$
+
+<p>That is an ordinary quadratic in $w$. Differentiate one parameter at a time
+and set the result to zero:</p>
+
+$$ \nabla L = 2X^\top X w - 2X^\top y = 0 \qquad\Longrightarrow\qquad \boxed{\;X^\top X\,w \;=\; X^\top y\;} $$
+
+<p>$X^\top X$ and $X^\top y$ are numbers you compute from the data, so the
+boxed line is a system of linear equations — two equations in two unknowns
+here — and solving it gives the best line exactly.</p>
+
+<h3>The three points by hand</h3>
+
+<p>Every entry of the Gram matrix is a dot product of two feature columns:</p>
+
+$$ X^\top X = \begin{bmatrix} 14 & 6 \\ 6 & 3\end{bmatrix}, \qquad X^\top y = \begin{bmatrix} 25 \\ 11 \end{bmatrix}, \qquad \det = 42 - 36 = 6. $$
+
+<p>The $14$ is $1 + 4 + 9$, the $6$ is $1 + 2 + 3$, and the $3$ is just $n$.
+On the right, $25 = 1\cdot 2 + 2\cdot 4 + 3\cdot 5$ and $11 = 2 + 4 + 5$.
+Inverting the $2\times 2$:</p>
+
+$$ \begin{bmatrix} w \\ b \end{bmatrix} = \frac{1}{6}\begin{bmatrix} 3 & -6 \\ -6 & 14\end{bmatrix}\begin{bmatrix} 25 \\ 11\end{bmatrix} = \frac{1}{6}\begin{bmatrix} 9 \\ 4 \end{bmatrix} = \begin{bmatrix} 3/2 \\ 2/3 \end{bmatrix}. $$
+
+<p>The fitted values are $13/6$, $11/3$, $31/6$, so the residuals are
+$r = (\tfrac16, -\tfrac13, \tfrac16)$ and
+$\mathrm{SSE} = \lVert r \rVert^2 = \tfrac16 \approx 0.167$. Two sanity checks
+fall out of the boxed equation: $X^\top r = 0$, so the residual is orthogonal
+to both feature columns, and since one of those columns is all ones, the
+residuals sum to zero.</p>
+
+<pre><code>import torch
+
+X = torch.tensor([[1., 1.],          # each row is [x_i, 1]
+                  [2., 1.],          # the 1 is the bias column
+                  [3., 1.]])
+y = torch.tensor([[2.], [4.], [5.]])
+
+print("X^T X =", (X.T @ X).tolist(), " X^T y =", (X.T @ y).flatten().tolist())
+
+w = torch.linalg.lstsq(X, y).solution          # solves X^T X w = X^T y
+r = X @ w - y                                  # the residual vector
+print("w, b  = [%.6f, %.6f]" % tuple(w.flatten().tolist()))
+print("SSE   = %.6f" % (r * r).sum().item())
+print("X^T r =", [round(v, 7) for v in (X.T @ r).flatten().tolist()])
+</code></pre>
+
+<pre><code>X^T X = [[14.0, 6.0], [6.0, 3.0]]  X^T y = [25.0, 11.0]
+w, b  = [1.500000, 0.666668]
+SSE   = 0.166667
+X^T r = [2.4e-06, 1.4e-06]
+</code></pre>
+
+<p>Training is that one <code>lstsq</code> call. No learning rate, no epochs,
+no seed, and the same answer on every machine.</p>
+
+<div class="widget" id="w-ls">
+  <h4>Least-squares playground</h4>
+  <p class="whint">The slide's three points. Move the slope and the intercept and watch the sum of squared errors; the dashed segments are the residuals the loss squares. Nothing you can do by hand gets under $1/6$.</p>
+  <label>slope $w$ = <span id="ls-w-val">1.00</span>
+    <input type="range" id="ls-w" min="0" max="3" step="0.01" value="1.00"></label>
+  <label>intercept $b$ = <span id="ls-b-val">1.00</span>
+    <input type="range" id="ls-b" min="-1" max="3" step="0.01" value="1.00"></label>
+  <button id="ls-solve">jump to the exact solution</button>
+  <button id="ls-reset">reset</button>
+  <svg id="ls-svg" viewBox="0 0 560 280" role="img" aria-label="Three points, a candidate line, and its residuals"></svg>
+  <div class="wout" id="ls-out"></div>
+</div>
+
+<h2 id="s3">3 · Why we iterate anyway</h2>
+<p class="srcline">Deck slide 7.</p>
+
+<p>An exact solution exists, and almost nobody uses it. There are two reasons.</p>
+
+<p>Scale. Solving $X^\top X w = X^\top y$ costs $O(nd^2 + d^3)$, and on the
+2,000 bag-of-words features of this very corpus $X^\top X$ is singular
+anyway: $\mathrm{rank}(X) = 1958$ of $2001$, partly because one verbatim
+repeated spam template contributes four identical columns. The condition
+number is about $1.1 \times 10^{42}$, and an unpivoted QR raises nothing while
+returning garbage.</p>
+
+<p>Shape. Change the loss or change the model and $\nabla_\theta L(\theta) = 0$
+stops being a linear system. There is nothing left to solve, only something to
+search: from where you stand, step downhill, repeat.</p>
+
+$$ \theta \leftarrow \theta - \eta \cdot (\text{slope at } \theta) $$
+
+<p>On the slide's example $L(\theta) = (\theta - 3)^2$ the slope is
+$2(\theta - 3)$, so with $\eta = 0.1$ the update is
+$\theta \leftarrow 0.8\,\theta + 0.6$, and from $\theta_0 = 0$ the iterates run
+$0 \to 0.60 \to 1.08 \to 1.464 \to \cdots \to 3$. The learning rate $\eta$ sets
+the step: too small it crawls, too large it diverges.</p>
+
+<div class="widget" id="w-gd">
+  <h4>Gradient-descent playground</h4>
+  <p class="whint">$L(\theta) = (\theta-3)^2$, starting at $\theta_0 = 0$, exactly the slide's example. Leave $\eta$ at $0.10$ and step to reproduce $0.60, 1.08, 1.464$. Then push $\eta$ past 1 and run: it diverges.</p>
+  <label>learning rate $\eta$ = <span id="gd-eta-val">0.10</span>
+    <input type="range" id="gd-eta" min="0.02" max="1.20" step="0.02" value="0.10"></label>
+  <button id="gd-step">step</button>
+  <button id="gd-run">run 12 steps</button>
+  <button id="gd-reset">reset</button>
+  <svg id="gd-svg" viewBox="0 0 560 240" role="img" aria-label="Parabola with gradient-descent iterates"></svg>
+  <div class="wout" id="gd-out"></div>
+</div>
+
+<p>From here on there is usually no formula at all. This update rule, run on
+batches, is how every model in the rest of the course is fitted.</p>
+
+<h2 id="s4">4 · Classification by regression</h2>
+<p class="srcline">Deck slides 8–11.</p>
+
+<p>Label ham $0$ and spam $1$, fit the same least-squares line, then threshold
+the fitted value at $0.5$. No new machinery. Two features, both of them
+countable by hand: the length of the message in characters, and how many of
+those characters are digits.</p>
+
+<table>
+<tr><th></th><th>mean chars</th><th>mean digits</th></tr>
+<tr><td>ham (3,861)</td><td>71.2</td><td>0.30</td></tr>
+<tr><td>spam (597)</td><td>138.9</td><td><strong>15.96</strong></td></tr>
+</table>
+
+<p>Spam carries fifty times the digits, and the fitted weights say the model
+noticed: $w = [0.000413,\ 0.04395,\ -0.004822]$ over
+$[\text{length},\ \text{digits},\ 1]$. One digit character moves the score as
+much as 106 characters of text do. The fit is three lines, run from inside the
+lab folder:</p>
+
+<pre><code>import torch, spam_lab                    # the lab's loader; SEED = 400
+train, test = spam_lab.split(spam_lab.load(spam_lab.DEFAULT_DATA))
+
+def design(rows):                         # x = [length, digits, 1]
+    X = [[len(t), sum(c.isdigit() for c in t), 1.] for _, t in rows]
+    return torch.tensor(X), torch.tensor([[float(l)] for l, _ in rows])
+
+X, y = design(train); Xte, yte = design(test)
+w = torch.linalg.lstsq(X, y).solution     # argmin ||Xw - y||^2
+acc = ((Xte @ w &gt;= 0.5).float() == yte).float().mean()
+print([round(v, 6) for v in w.flatten().tolist()], "%.2f%%" % (100 * acc))
+# [0.000413, 0.04395, -0.004822] 96.33%
+</code></pre>
+
+<p>On the 1,116 held-out messages, 150 of them spam, that scores 96.33%
+accuracy, 98.23% precision and 74.00% recall. Before being impressed: always
+saying "ham" scores 86.56% on the same test set, 966 messages out of 1,116.
+Accuracy is a number that has to beat something.</p>
+
+<h3>The three ways it breaks</h3>
+
+<ol>
+  <li>The output is not a probability. Test scores run over
+  $[-0.004,\ 1.597]$, and 4.21% of them fall outside $[0,1]$. Nothing in the
+  model was ever told to stay in range.</li>
+  <li>Squared error punishes being confidently right. Target $1$, prediction
+  $1.597$, loss $(0.597)^2 = 0.356$; a message scraping over the line at
+  $0.51$ costs only $(0.49)^2 = 0.240$. The loss is more upset by the message
+  it got emphatically right.</li>
+  <li>So points far out on the <em>correct</em> side drag the boundary toward
+  them. Twenty constructed messages at 800 characters and 120 digits, added to
+  the 4,458 training messages, swing the fit enough to drop test recall from
+  74.00% to 34.67%. Logistic regression on the same contaminated data does not
+  move.</li>
+</ol>
+
+<div class="co threat">Those twenty injected messages are labelled
+<em>correctly</em>. Poisoning does not require flipping a label; putting real
+spam at an extreme position in feature space is enough, because squared error
+never stops caring how far a point is from the line.</div>
+
+<h3>The threshold was never justified</h3>
+
+<p>Nothing about $0.5$ came out of the fit; it is where the two labels' midpoint
+happens to sit. Since the boundary just slides along the score, moving the
+threshold trades the two error types against each other, and the widget below
+is the whole trade on the real held-out set.</p>
+
+<div class="widget" id="w-thr">
+  <h4>Threshold explorer</h4>
+  <p class="whint">All 1,116 held-out messages, scored by the least-squares model above: $s = 0.000413\,\ell + 0.04395\,d - 0.004822$. At the default $0.50$ the counts reproduce the slide exactly. Drag left to buy recall with false positives; drag right and precision first reaches 100% at 0.67, with recall down to 61.33%.</p>
+  <label>threshold = <span id="thr-val">0.50</span>
+    <input type="range" id="thr-t" min="-0.05" max="1.60" step="0.01" value="0.50"></label>
+  <button id="thr-half">back to 0.50</button>
+  <svg id="thr-svg" viewBox="0 0 560 220" role="img" aria-label="Precision and recall against the decision threshold"></svg>
+  <div class="wout" id="thr-out"></div>
+</div>
+
+<p>Sliding the threshold buys back recall, and it fixes neither of the other
+two defects. What we want next is an output that is a probability by
+construction, and a loss that stops caring once a point is confidently right.</p>
+
+<h2 id="s5">5 · Logistic regression</h2>
+<p class="srcline">Deck slides 12–15.</p>
+
+<p>Security questions are rarely "predict a number". They are attack or
+benign, and the useful answer is a probability. Keep the weighted sum and
+squash it into $(0,1)$:</p>
+
+$$ \sigma(z) = \frac{1}{1 + e^{-z}}, \qquad p(\text{attack} \mid x) = \sigma\!\left(w^\top x + b\right). $$
+
+<p>Invert that and the model is a straight line in the log-odds:</p>
+
+$$ \log \frac{p}{1-p} \;=\; w^\top x + b. $$
+
+<p>So every weight is an odds multiplier, which is why a logistic model can be
+audited coefficient by coefficient. The two-feature fit has
+$w_{\text{dig}} = 0.6237$: one more digit character multiplies the odds of
+spam by $e^{0.6237} = 1.87$. And $\sigma$ is monotone, so $p \ge 0.5$ exactly
+when $w^\top x + b \ge 0$ — the boundary is still a straight line. The shape of
+the decision did not change. What changed is the scale the answer is reported
+on, and the loss used to fit it.</p>
+
+<h3>Where the closed form dies</h3>
+
+<p>Least squares had a formula because setting the gradient to zero left a
+linear system. Here $\sigma$ wraps around the unknown $w$, so no rearranging
+gets $w$ back out on its own, and there is nothing left to solve.</p>
+
+<table>
+<tr><th>loss</th><th>model</th><th>$\nabla L = 0$</th><th>what you do</th></tr>
+<tr><td>squared</td><td>linear</td><td>a linear system</td><td>a formula</td></tr>
+<tr><td>cross-entropy</td><td>linear</td><td>not a linear system</td><td>descend</td></tr>
+<tr><td>anything</td><td>a network</td><td>not a linear system</td><td>descend, no guarantee</td></tr>
+</table>
+
+<p>Row two is still convex, so descent gets the global optimum and the only
+cost is that you have to iterate. Row three is where that guarantee goes, and
+we get there in section 9.</p>
+
+<h3>The same linear map on 2,000 features</h3>
+
+<p>Same corpus, same split, now with 2,000 word-count features instead of two
+hand-counted ones. Both models below fit the identical linear map. Only the
+loss differs:</p>
+
+<pre><code>model   = nn.Linear(2000, 1)                      # z = w.x + b, the LOGIT
+loss_fn = nn.BCEWithLogitsLoss()                  # sigma applied inside the loss
+</code></pre>
+
+<table>
+<tr><th>2,000 features, same linear map</th><th>acc</th><th>prec</th><th>recall</th><th>F1</th><th>FP</th></tr>
+<tr><td>exact least squares (<code>lstsq</code>)</td><td>97.22</td><td>94.07</td><td>84.67</td><td>89.12</td><td><strong>8</strong></td></tr>
+<tr><td>logistic regression (BCE)</td><td><strong>98.48</strong></td><td><strong>99.26</strong></td><td><strong>89.33</strong></td><td><strong>94.04</strong></td><td><strong>1</strong></td></tr>
+</table>
+
+<p>Accuracy moved 1.26 points, which on features this easy is close to noise.
+The error that costs you moved from eight false positives to one, and in spam
+filtering a false positive is somebody's real mail deleted.</p>
+
+<p>Because the output is now a probability, the threshold follows from cost
+instead of habit. A missed attack costing a hundred times a false alarm puts it
+at $0.0099$. The familiar $0.5$ is what you get when you assume the two costs
+are equal, and that assumption is usually made by not thinking about it.</p>
+
+<h2 id="s6">6 · Softmax and cross-entropy</h2>
+<p class="srcline">Deck slides 16–17.</p>
+
+<p>The spam filter answered one yes/no question. Plenty of real questions are
+$K$-way: what is this flow doing — benign, port scan, brute force, exfil?
+Take $K$ raw scores $z = (z_1,\dots,z_K)$, called logits, exponentiate so
+everything is positive, then divide by the total so it sums to one:</p>
+
+$$ \mathrm{softmax}(z)_k = \frac{e^{z_k}}{\sum_{j=1}^{K} e^{z_j}}, \qquad p_k > 0, \qquad \sum_{k=1}^{K} p_k = 1. $$
+
+<pre><code>  class          logit z_k      e^{z_k}          p_k
+  benign            +2          7.389056       0.6439
+  port-scan         +1          2.718282       0.2369
+  brute-force        0          1.000000       0.0871
+  exfil             -1          0.367879       0.0321
+                           sum = 11.475217   sum = 1.0000
+</code></pre>
+
+<p>Four exponentials and one division. The logits come from exactly the same
+place the spam score did — a weighted sum of features — except that there is
+one score per class instead of one score total.</p>
+
+<p>Scoring the answer is one line, at any $K$:</p>
+
+$$ H(y, p) = -\sum_{k=1}^{K} y_k \log p_k \;=\; -\log p_{k^\star} \quad\text{when } y \text{ is one-hot at the true class } k^\star. $$
+
+<p>The negative log of the probability you gave the right answer. Permuting
+the same four logits shows the range:</p>
+
+<table>
+<tr><th>prediction</th><th>logits</th><th>$p_{\text{exfil}}$</th><th>loss $-\ln p$</th></tr>
+<tr><td>confident and <strong>correct</strong></td><td>$(-1, 0, 1, 2)$</td><td>0.6439</td><td><strong>0.4402</strong></td></tr>
+<tr><td>hedging (uniform)</td><td>$(0, 0, 0, 0)$</td><td>0.2500</td><td><strong>1.3863</strong> $= \ln 4$</td></tr>
+<tr><td>confident and <strong>wrong</strong></td><td>$(2, 1, 0, -1)$</td><td>0.0321</td><td><strong>3.4402</strong></td></tr>
+</table>
+
+<p>Being confidently wrong is unbounded, so a handful of such points can
+dominate a batch. And $K = 2$ is not a different model: the softmax of the two
+logits $(0, z)$ is $(1 - \sigma(z),\ \sigma(z))$, so the spam filter of the
+last section is this section at $K = 2$.</p>
+
+<div class="co note"><code>cross_entropy</code> wants raw logits, because it
+applies the softmax itself. Hand it softmax output and it squashes twice: on
+the confident-and-wrong row above the loss comes back $1.6347$ instead of
+$3.4402$, about 2.1 times low, with no warning and no exception. Accuracy
+would not have caught it either.</div>
+
+<div class="widget" id="w-sm">
+  <h4>Softmax and cross-entropy calculator</h4>
+  <p class="whint">The slide's four logits are the default; the table reproduces $e^{z_k}$, the sum $11.475217$, and $p$ to four places. Retype the permutations from the table above, or pick a different true class, and watch $-\ln p$ move.</p>
+  <label>logits <input type="text" id="sm-z" value="2, 1, 0, -1" size="20"></label>
+  <label>true class
+    <select id="sm-k">
+      <option value="0" selected>benign</option>
+      <option value="1">port-scan</option>
+      <option value="2">brute-force</option>
+      <option value="3">exfil</option>
+    </select></label>
+  <div id="sm-bars" style="margin-top:0.6em;"></div>
+  <div class="wout" id="sm-out"></div>
+</div>
+
+<h2 id="s7">7 · Where <em>x</em> comes from</h2>
+<p class="srcline">Deck slides 18–20.</p>
+
+<h3>One-hot encoding</h3>
+
+<p>Numbering a log's categorical levels — <code>TCP=0, UDP=1, ICMP=2</code> —
+asserts not just an order but a metric:
+$\text{ICMP} - \text{UDP} = \text{UDP} - \text{TCP}$, and ICMP is "twice" UDP.
+Suppose the malicious rate goes up and then down: 0.10, 0.90, 0.20. Every line
+$\hat y = ax + b$ is monotone, so no line can follow that. Solving the normal
+equations on the three points gives $a = 0.05$, $b = 0.35$, predicting
+0.35 / 0.40 / 0.45 against a truth of 0.10 / 0.90 / 0.20, with SSE $0.375$.
+That fit is exact, not undertrained — it is the best line available, and it is
+wrong on all three protocols. The failure is in the representation.</p>
+
+<p>One-hot gives each level its own axis. Then $X = I_3$, so $X^\top X = I$ and
+the normal equations return $w = X^\top y = (0.1, 0.9, 0.2)$: each weight is
+just that protocol's rate, and the fit is exact.</p>
+
+<pre><code>import torch, torch.nn.functional as F
+idx = torch.tensor([0, 1, 2, 1, 0])        # TCP UDP ICMP UDP TCP
+X = F.one_hot(idx, num_classes=3)
+# [[1,0,0],[0,1,0],[0,0,1],[0,1,0],[1,0,0]]
+# X.shape (5, 3)   X.dtype torch.int64  -&gt; .float() before nn.Linear
+</code></pre>
+
+<p>The cost is one parameter per level. Fine for three protocols; a port field
+with 65,536 of them gets an embedding instead. The 2,000-dimensional
+bag-of-words vector used above is a sum of one-hots, one axis per vocabulary
+word.</p>
+
+<h3>One recipe, many models: GLMs</h3>
+
+<p>Everything so far is the same three-part recipe. A generalized linear model
+is a weighted sum, then a link function chosen to match what you are
+predicting; the loss follows from the link.</p>
+
+<table>
+<tr><th>Predict</th><th>Weighted sum, then…</th><th>Name</th></tr>
+<tr><td>a number</td><td>…nothing (identity)</td><td>linear regression</td></tr>
+<tr><td>a probability</td><td>…sigmoid</td><td>logistic regression</td></tr>
+<tr><td>a count (events/hour)</td><td>…exponential</td><td>Poisson regression</td></tr>
+</table>
+
+<p>Keep the shape of that table in mind for section 9, where a neuron turns out
+to be one row of it.</p>
+
+<h3>Where the features come from</h3>
+
+<p>Someone has to decide what $x$ is, and in security that decision is the
+system:</p>
+
+<ul>
+  <li>Email and phishing: sender-domain age, URL entropy, mismatch of display
+  name against address.</li>
+  <li>Network: packets per flow, byte histograms, timing intervals, port
+  fan-out.</li>
+  <li>Malware: imported API calls, section entropy, opcode n-grams.</li>
+</ul>
+
+<table>
+<tr><th>Hand-built features</th><th>Learned features (Week 8 onward)</th></tr>
+<tr><td>auditable, cheap</td><td>found by the model itself</td></tr>
+<tr><td>capped by human imagination</td><td>often stronger</td></tr>
+<tr><td>legible to attackers</td><td>opaque, with new failure modes</td></tr>
+</table>
+
+<p>Neither column dominates. The choice is a design decision with a threat
+model attached.</p>
+
+<h2 id="s8">8 · Measuring honestly</h2>
+<p class="srcline">Deck slides 21–23.</p>
+
+<p>Never grade a model on the examples it trained on.</p>
+
+<pre><code>  all labeled data
+  ├── training set  (fit the knobs here)
+  └── test set      (touch ONCE, at the end — this is the grade)
+</code></pre>
+
+<p>Training loss can be driven to nearly zero by memorizing, which proves
+nothing. The test set is an estimate of performance on future inputs, and it
+is the thing anyone is actually buying.</p>
+
+<div class="co threat">Ask what a reported accuracy was measured on, and
+whether the model had already seen it. Nearly every inflated ML claim traces
+to evaluation contamination: testing on training data, testing on the same
+malware families, testing on traffic from the same network. The test set is
+the denominator.</div>
+
+<h3>Overfitting</h3>
+
+<p>A model with enough capacity scores perfectly on training data by
+memorizing it, while learning nothing usable. On twelve real messages, a
+degree-eleven polynomial passes through every point: training error
+<strong>0.00</strong>, held-out error <strong>244</strong>. A straight line on
+the same twelve misses every point slightly: <strong>6.69</strong> training,
+<strong>6.24</strong> held out. The line is worse where it was fitted and
+better everywhere else.</p>
+
+<p>The fixes are one line each: more data, a simpler model, a penalty for
+complexity (regularization: add $\lambda \cdot (\text{size of weights})$ to the
+loss), stop training early.</p>
+
+<div class="co note">Overfitting is memorization, and later in the course
+memorization becomes a privacy problem: models can be made to regurgitate
+their training data. Same phenomenon, security consequences.</div>
+
+<h3>Base rates</h3>
+
+<p>Your IDS is 99% accurate. An alert just fired. Is it an attack?</p>
+
+<p>Suppose 1 in 10,000 events is a real attack and the detector is 99% accurate
+in both directions. Out of 1,000,000 events:</p>
+
+<table>
+<tr><th></th><th>flagged</th><th>not flagged</th></tr>
+<tr><td><strong>100 attacks</strong></td><td>99</td><td>1</td></tr>
+<tr><td><strong>999,900 benign</strong></td><td><strong>9,999</strong></td><td>989,901</td></tr>
+</table>
+
+<p>An alert is a real attack $99/(99 + 9{,}999) = 0.98\%$ of the time. Ninety-nine
+percent of the alert queue is false, at "99% accuracy". The two numbers that
+survive this are precision (of what we flagged, how much was real) and recall
+(of what was real, how much did we flag), quoted at the threshold you
+deploy.</p>
+
+<div class="widget" id="w-br">
+  <h4>Base-rate calculator</h4>
+  <p class="whint">Prevalence and the two error rates in; the chance an alert is real out. The defaults are the slide's. Hold the detector fixed and change only the prevalence to 1 in 100 — the same 99/99 detector now runs at 50% precision, because precision is a property of the deployment, not of the model.</p>
+  <label>1 attack in <input type="text" id="br-prev" value="10000" size="7"> events</label>
+  <label>true-positive rate <input type="text" id="br-tpr" value="99" size="4">%</label>
+  <label>false-positive rate <input type="text" id="br-fpr" value="1" size="4">%</label>
+  <div id="br-table" style="margin-top:0.7em;"></div>
+  <div class="wout" id="br-out"></div>
+</div>
+
+<h2 id="s9">9 · Past the linear wall</h2>
+<p class="srcline">Deck slides 24–28.</p>
+
+<h3>The wall</h3>
+
+<p>Four points: $(0,0)$ and $(1,1)$ in one class, $(0,1)$ and $(1,0)$ in the
+other. No straight line separates them. Tilt the line however you like and one
+point lands on the wrong side, and the reason is two additions. The class-1
+points require $w_2 + b > 0$ and $w_1 + b > 0$; adding those gives
+$w_1 + w_2 + 2b > 0$. The class-0 point $(0,0)$ forces $b \le 0$, so
+$w_1 + w_2 + b > -b \ge 0$, which contradicts the requirement
+$w_1 + w_2 + b \le 0$ coming from $(1,1)$.</p>
+
+<p>Training <code>nn.Linear(2, 1)</code> on it settles at 50% accuracy, and a
+brute-force sweep of 226,981 weight settings never beats 75%. That 50% is the
+global optimum of a convex problem, so nobody tunes their way out of it.</p>
+
+<div class="co note">The shape is common in security. Off-hours traffic on the
+maintenance port is the nightly backup; business-hours traffic on a normal port
+is routine. The case you want is <em>exactly one</em> of the two, which is an
+XOR, and no straight line draws it.</div>
+
+<h3>A neuron</h3>
+
+<p>Every model on this page has been a weighted sum followed by a squash.
+Drawn as one unit, that gets a name. The word is historical branding, not a
+claim about brains.</p>
+
+<table>
+<tr><th>the squash</th><th>the model</th><th>where you met it</th></tr>
+<tr><td>none</td><td>linear regression</td><td>the least-squares fit</td></tr>
+<tr><td>sigmoid</td><td>logistic regression</td><td>the spam filter</td></tr>
+<tr><td>$\max(0, z)$, called ReLU</td><td>a hidden unit</td><td>new today</td></tr>
+</table>
+
+<p>The bag-of-words spam filter is <code>nn.Linear(2000, 1)</code> and a
+sigmoid: 2,001 parameters, one neuron. Two of the three rows are models
+already fitted on real data earlier on this page.</p>
+
+<h3>Stacking</h3>
+
+<p>Feed a layer of neurons into another neuron and you have a network. Nothing
+in the data says what the middle column should hold, so the network invents
+those features itself; stated in the right features, the problem gets easy and
+the last neuron finishes it with a straight line. The wall falls exactly this
+way: two ReLU units and nine parameters, set by hand with no training at all,
+compute XOR.</p>
+
+<div class="co note">An analyst who writes a rule for "unusual port <em>and</em>
+off-hours" has hand-built a hidden unit. The network is what finds those
+combinations without being told to.</div>
+
+<h3>Why the squash matters</h3>
+
+<p>Pull the squash out and stacking buys nothing, because a straight line of a
+straight line is a straight line. In one variable it is arithmetic:</p>
+
+$$ 3(2x + 1) + 4 \;=\; 6x + 7. $$
+
+<p>The same algebra runs with matrices and says the same thing. A hundred
+layers with nothing between them collapse into one layer drawing one boundary,
+and you are back at the four unseparated points. ReLU is the standard choice,
+and the only property that matters today is that it is not a straight line.</p>
+
+<div class="co defense">Depth without a nonlinearity is not depth: the squash
+is the only reason a second layer exists.</div>
+
+<h3>What depth costs</h3>
+
+<p>Width is how many units stand in one layer; depth is how many hidden layers
+are stacked; hidden means nobody observes those layers, and no label ever says
+what the third one should have held. That last point is most of why these
+models are hard to audit.</p>
+
+<p>Depth pays when the thing you are predicting is built in stages — bytes,
+then opcodes, then functions, then behaviour. It buys nothing on our spam
+features, where "contains <code>ringtone</code>" is already the abstraction the
+decision needs. What it always costs is parameters. One neuron over the
+2,000-word vocabulary is $2001$: one weight per word, plus a bias. Sixteen
+hidden units feeding one output is $16 \cdot 2001 + 17 = 32{,}033$, and 32,000
+of that sits in the first matrix. So "how big is my network" is mostly "how big
+is my vocabulary".</p>
+
+<div class="widget" id="w-pc">
+  <h4>Parameter counter</h4>
+  <p class="whint">Hidden width $0$ means no hidden layer, which is the one-neuron spam filter. The two buttons are the slide's numbers. Notice how little the second layer ever contributes, and how much the vocabulary does.</p>
+  <label>input dimension $d$ = <input type="text" id="pc-d" value="2000" size="6"></label>
+  <label>hidden width $H$ = <input type="text" id="pc-h" value="16" size="5"></label>
+  <label>outputs $m$ = <input type="text" id="pc-m" value="1" size="4"></label>
+  <div style="margin-top:0.6em;">
+    <button id="pc-b1">one neuron on bag of words</button>
+    <button id="pc-b2">sixteen hidden units</button>
+  </div>
+  <div class="wout" id="pc-out"></div>
+</div>
+
+<div class="co note">Capacity is not free: it buys memorization and opacity.
+One weight per word can be sorted and read. Sixteen invented features that
+nobody named cannot.</div>
+
+<h2 id="s10">Today in one screen</h2>
+<p class="srcline">Deck slide 29.</p>
+
+$$ \text{model } f_\theta \;\longrightarrow\; \text{loss scores it} \;\longrightarrow\; \text{fit } \theta \;\longrightarrow\; \text{grade on held-out data} $$
+
+<pre><code>  ONE corpus: 5,574 SMS, 4,458 train / 1,116 test, 13.4% spam
+
+  exact least squares ─▶ logistic (BCE) ─▶ softmax + CE ─▶ one hidden layer
+  lstsq, closed form     descent, convex   the same loss   32,033 params
+  97.22%   8 FP          98.48%   1 FP     spam is K = 2   98.57%, untrained
+
+  always-say-ham baseline: 86.56% = 966/1116 — the number every claim must beat
+</code></pre>
+
+<ul>
+  <li>A closed form needs a squared loss and a linear model. Change either and
+  stationarity stops being a linear system; at 2,000 features $X^\top X$ is
+  singular anyway, rank 1958 of 2001.</li>
+  <li>One-hots encode a category, and a bag of words is a sum of them.
+  Cross-entropy over a softmax handles any number of classes; spam is the
+  $K = 2$ case.</li>
+  <li>XOR needs a hidden layer: no line does it. A trained linear model scores
+  50%, the best one that exists 75%, and two ReLU units with 9 parameters get
+  it exactly. Delete the ReLU and a hundred stacked layers collapse into one
+  layer drawing one boundary.</li>
+  <li>Parameters are what depth and width cost: one neuron on bag of words is
+  2,001, sixteen of them 32,033, and 99.9% of that sits in the first matrix.</li>
+  <li>Base rates and held-out data decide whether a detector is usable, not
+  accuracy.</li>
+</ul>
+
+<p>The last rung is the honest one. The hidden layer scored 98.57% against
+logistic regression's 98.48% — 0.09 points, about one message out of 1,116 —
+and that number is the lab's own run, quoted as a baseline, not something
+trained here. The hype filter points inward too.</p>
+
+<hr>
+<p class="srcline">Everything on this page follows the
+<a href="/ai-security-course/slides/03-ml-background/">ML Introduction</a>
+deck and stops where it does. Backpropagation and training dynamics are Week 8;
+adversarial examples are Week 9. These notes are a first draft and will be
+revised.</p>
+
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  /* ---------- KaTeX ---------- */
+  function tryRender() {
+    if (window.renderMathInElement) {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false }
+        ],
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      });
+    } else { setTimeout(tryRender, 200); }
+  }
+  tryRender();
+
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(x, d) { return (Math.abs(x) < 1e12 ? x.toFixed(d === undefined ? 3 : d) : x.toExponential(2)); }
+  function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
+  /* ---------- 1. Least-squares playground ---------- */
+  (function () {
+    var PX = [1, 2, 3], PY = [2, 4, 5];
+    var svg = $("ls-svg");
+    function gx(x) { return 60 + x / 4 * 470; }
+    function gy(y) { return 240 - y / 6 * 210; }
+    function sse(w, b) {
+      var s = 0;
+      for (var i = 0; i < 3; i++) { var r = w * PX[i] + b - PY[i]; s += r * r; }
+      return s;
+    }
+    function draw() {
+      var w = parseFloat($("ls-w").value), b = parseFloat($("ls-b").value);
+      $("ls-w-val").textContent = fmt(w, 2);
+      $("ls-b-val").textContent = fmt(b, 2);
+      var s = '<line x1="60" y1="240" x2="540" y2="240" stroke="#999"/>' +
+              '<line x1="60" y1="20" x2="60" y2="240" stroke="#999"/>';
+      var t;
+      for (t = 1; t <= 4; t++) {
+        s += '<line x1="' + gx(t) + '" y1="240" x2="' + gx(t) + '" y2="245" stroke="#999"/>' +
+             '<text x="' + gx(t) + '" y="258" font-size="10" text-anchor="middle" fill="#667">' + t + '</text>';
+      }
+      for (t = 1; t <= 6; t++) {
+        s += '<line x1="55" y1="' + gy(t) + '" x2="60" y2="' + gy(t) + '" stroke="#999"/>' +
+             '<text x="48" y="' + (gy(t) + 4) + '" font-size="10" text-anchor="end" fill="#667">' + t + '</text>';
+      }
+      var y0 = b, y4 = 4 * w + b;
+      s += '<line x1="' + gx(0) + '" y1="' + gy(y0) + '" x2="' + gx(4) + '" y2="' + gy(y4) + '" stroke="#F76900" stroke-width="2.5"/>';
+      var rows = [];
+      for (var i = 0; i < 3; i++) {
+        var yh = w * PX[i] + b, r = yh - PY[i];
+        s += '<line x1="' + gx(PX[i]) + '" y1="' + gy(PY[i]) + '" x2="' + gx(PX[i]) + '" y2="' + gy(yh) +
+             '" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/>';
+        s += '<circle cx="' + gx(PX[i]) + '" cy="' + gy(PY[i]) + '" r="6" fill="#000E54"/>';
+        s += '<text x="' + (gx(PX[i]) + 10) + '" y="' + (gy(PY[i]) - 8) + '" font-size="10" fill="#000E54">(' +
+             PX[i] + ',' + PY[i] + ')</text>';
+        rows.push("  x=" + PX[i] + "  y=" + PY[i] + "   pred " + fmt(yh) + "   residual " + fmt(r) + "   squared " + fmt(r * r));
+      }
+      svg.innerHTML = s;
+      var tot = sse(w, b), best = 1 / 6;
+      $("ls-out").textContent =
+        "line:  y-hat = " + fmt(w, 2) + " x + " + fmt(b, 2) + "\n" +
+        rows.join("\n") + "\n" +
+        "  SSE = " + fmt(tot, 4) + "   best possible = 0.1667   excess = " + fmt(tot - best, 4);
+    }
+    ["ls-w", "ls-b"].forEach(function (id) { $(id).addEventListener("input", draw); });
+    $("ls-solve").addEventListener("click", function () {
+      $("ls-w").value = "1.50"; $("ls-b").value = "0.67"; draw();
+      $("ls-out").textContent += "\n  (sliders step by 0.01, so b shows 0.67; the exact answer is w = 3/2, b = 2/3, SSE = 1/6)";
+    });
+    $("ls-reset").addEventListener("click", function () { $("ls-w").value = "1.00"; $("ls-b").value = "1.00"; draw(); });
+    draw();
+  })();
+
+  /* ---------- 2. Gradient-descent playground ---------- */
+  (function () {
+    var theta = 0, hist = [0];
+    var svg = $("gd-svg");
+    function R(t) { return (t - 3) * (t - 3); }
+    function px(t) { return 40 + (t + 3) / 12 * 500; }
+    function py(r) { return 210 - Math.min(r, 36) / 36 * 180; }
+    function clamp(t) { return Math.max(-3, Math.min(9, t)); }
+    function draw() {
+      var s = '<line x1="40" y1="210" x2="540" y2="210" stroke="#999"/>' +
+              '<line x1="40" y1="20" x2="40" y2="210" stroke="#999"/>' +
+              '<text x="' + px(3) + '" y="228" font-size="10" text-anchor="middle" fill="#1e824c">3</text>';
+      var pts = [];
+      for (var t = -3; t <= 9.001; t += 0.15) pts.push(px(t) + "," + py(R(t)));
+      s += '<polyline fill="none" stroke="#000E54" stroke-width="2" points="' + pts.join(" ") + '"/>';
+      s += '<circle cx="' + px(3) + '" cy="' + py(0) + '" r="4" fill="#1e824c"/>';
+      for (var i = 0; i < hist.length; i++) {
+        var op = 0.25 + 0.75 * i / Math.max(1, hist.length - 1);
+        s += '<circle cx="' + px(clamp(hist[i])) + '" cy="' + py(R(hist[i])) + '" r="5" fill="#F76900" opacity="' + op + '"/>';
+        if (i > 0) {
+          s += '<line x1="' + px(clamp(hist[i - 1])) + '" y1="' + py(R(hist[i - 1])) +
+               '" x2="' + px(clamp(hist[i])) + '" y2="' + py(R(hist[i])) +
+               '" stroke="#F76900" stroke-width="1" opacity="0.5"/>';
+        }
+      }
+      svg.innerHTML = s;
+      var eta = parseFloat($("gd-eta").value);
+      $("gd-out").textContent =
+        "update:  theta <- (1 - 2*eta) theta + 6*eta   =   " + fmt(1 - 2 * eta, 2) + " theta + " + fmt(6 * eta, 2) + "\n" +
+        "theta:   " + hist.map(function (t) { return fmt(t, 2); }).join(" -> ") +
+        (Math.abs(theta) > 1e3 ? "\n(diverged)" : "");
+    }
+    function step() {
+      var eta = parseFloat($("gd-eta").value);
+      theta = theta - eta * 2 * (theta - 3);
+      hist.push(theta); if (hist.length > 14) hist.shift();
+      draw();
+    }
+    $("gd-eta").addEventListener("input", function () { $("gd-eta-val").textContent = fmt(parseFloat(this.value), 2); draw(); });
+    $("gd-step").addEventListener("click", step);
+    $("gd-run").addEventListener("click", function () { for (var i = 0; i < 12; i++) step(); });
+    $("gd-reset").addEventListener("click", function () { theta = 0; hist = [0]; draw(); });
+    draw();
+  })();
+
+  /* ---------- 3. Threshold explorer ----------
+     The real held-out split: 1,116 messages as "length,digits,label",
+     exported once from labs/spam-classification (SEED = 400). Scores use the
+     least-squares weights printed on the slide.                          */
+  (function () {
+    var RAW = "13,1,0 37,0,0 28,0,0 23,0,0 109,0,0 22,0,0 144,15,1 36,0,0 23,0,0 159,31,1 55,0,0 159,14,1 92,0,0 54,1,0 85,0,0 54,0,0 156,1,0 166,0,0 71,0,0 36,0,0 32,0,0 76,2,0 36,0,0 66,0,0 159,0,0 444,11,0 71,0,0 158,27,1 156,0,0 247,0,0 119,0,0 34,0,0 138,5,1 28,1,0 84,0,0 54,0,0 149,0,1 85,0,0 27,0,0 69,0,0 152,11,1 126,17,1 42,0,0 46,0,0 73,0,0 84,1,0 28,1,0 41,0,0 72,0,0 23,0,0 35,0,0 30,0,0 76,3,0 31,0,0 145,0,0 105,0,0 88,0,0 36,0,0 23,0,0 97,0,0 70,0,0 17,0,0 36,0,0 45,0,0 154,13,1 70,0,1 66,0,0 26,0,0 59,0,0 101,0,0 37,1,0 152,0,0 78,0,0 27,0,0 126,0,0 67,1,0 51,0,0 27,0,0 87,0,0 36,0,0 51,0,0 27,1,0 179,0,0 134,0,0 23,0,0 159,0,0 70,0,0 62,0,0 25,1,0 87,2,0 65,1,0 45,0,0 86,2,0 41,0,0 69,0,0 35,0,0 40,0,0 32,0,0 154,0,0 53,0,0 31,0,0 61,0,0 40,0,0 16,0,0 155,21,1 156,15,1 38,0,0 144,0,0 166,0,0 21,0,0 72,1,0 47,0,0 51,0,0 59,0,0 53,0,0 115,0,0 45,0,0 19,0,0 45,0,0 70,0,0 458,0,0 61,0,0 149,17,1 23,0,0 23,0,0 147,22,1 53,0,0 61,0,0 86,0,0 125,2,0 160,0,0 39,0,0 23,0,0 55,0,0 158,27,1 162,19,1 61,0,0 41,0,0 21,0,0 27,0,0 54,0,0 75,0,0 54,0,0 155,20,1 48,0,0 25,0,0 160,0,0 24,0,0 154,25,1 33,0,0 70,1,0 34,0,0 64,1,0 179,2,0 78,0,0 37,0,0 34,0,0 57,0,0 126,24,1 5,0,0 129,0,0 53,0,0 26,0,0 24,0,0 281,0,0 82,0,0 28,0,0 22,0,0 53,0,0 143,22,1 17,0,0 142,2,0 48,0,0 22,0,0 68,0,0 101,0,0 52,0,0 159,18,1 146,0,0 148,2,0 161,3,0 44,0,0 68,0,0 130,0,0 27,0,0 157,13,1 154,6,0 40,0,0 223,23,1 89,0,0 20,0,0 77,0,0 44,0,0 82,0,0 25,0,0 107,1,0 22,0,0 165,2,0 51,0,0 44,0,0 149,25,1 31,0,0 155,0,0 143,1,0 160,21,1 150,5,0 59,0,0 35,0,0 27,0,0 84,0,0 24,0,0 29,0,0 47,0,0 33,0,0 237,0,0 37,0,0 122,2,0 133,0,0 27,0,0 202,0,0 69,0,0 156,3,0 161,21,1 152,1,0 70,0,0 86,0,0 81,0,0 24,0,0 34,1,0 160,25,1 33,0,0 32,0,0 114,18,1 140,2,1 65,0,0 74,0,0 23,0,0 85,0,0 25,0,0 139,20,1 36,0,0 110,3,0 125,8,1 62,0,0 37,0,0 33,0,0 96,0,0 71,0,0 137,6,1 112,2,0 161,24,1 120,1,0 22,0,0 54,0,0 112,0,0 22,0,0 70,0,0 104,0,0 22,0,0 155,1,1 99,15,1 588,2,0 149,3,1 28,0,0 29,1,0 54,0,0 65,0,0 66,0,0 158,19,1 127,1,0 26,0,0 145,20,1 120,0,0 70,0,0 37,0,0 22,0,0 92,0,0 157,30,1 65,0,0 52,4,0 24,0,0 588,2,0 46,2,0 95,0,0 69,0,0 50,0,0 72,1,0 69,0,1 25,0,0 35,0,0 107,0,0 446,4,0 72,0,0 124,11,1 55,1,0 102,0,0 114,1,0 38,0,0 158,0,0 34,0,0 101,12,1 156,18,1 51,0,0 155,12,1 96,7,1 136,0,0 56,0,0 153,1,0 97,0,0 26,0,0 155,16,1 137,0,0 151,0,0 144,0,0 154,24,1 22,0,0 99,0,0 58,2,0 79,0,0 155,0,0 154,27,1 91,2,0 5,0,0 90,0,0 134,0,0 54,0,0 59,0,0 23,0,0 103,5,0 62,0,0 37,0,0 22,0,0 10,0,0 37,0,0 37,0,0 19,0,0 38,0,0 26,0,0 45,1,0 62,0,0 2,0,0 26,0,0 58,0,0 60,0,0 56,0,0 34,0,0 158,19,1 87,0,0 53,0,0 156,18,1 90,0,0 128,0,0 30,0,0 134,0,0 72,0,0 37,0,0 38,1,0 248,9,0 154,2,0 160,11,1 154,19,1 158,0,0 35,1,0 52,0,0 52,0,0 25,0,0 35,0,0 73,0,0 63,0,0 153,0,1 36,0,0 35,0,0 52,0,0 62,1,0 77,0,0 148,1,0 79,0,0 74,1,0 22,0,0 19,1,0 9,0,0 185,0,0 24,0,0 44,0,0 57,0,0 110,0,0 28,0,0 59,0,0 75,0,0 73,0,0 78,0,0 148,0,0 26,0,0 25,0,0 65,0,0 68,0,0 82,0,0 63,0,0 147,3,0 157,2,1 99,10,1 57,0,0 90,0,0 133,2,0 38,0,0 30,0,0 24,0,0 134,2,0 38,0,0 53,0,0 104,0,0 92,0,0 29,0,0 73,0,0 84,0,0 58,0,0 127,3,0 101,0,0 148,0,0 184,0,0 77,1,0 160,26,1 132,0,0 50,0,0 66,0,0 76,0,0 155,14,1 43,1,0 30,0,0 51,0,0 67,0,0 83,17,1 36,0,0 159,2,1 40,0,0 23,0,0 38,0,0 48,1,0 25,0,0 36,0,0 52,0,0 101,0,0 100,0,0 197,16,1 121,0,0 51,0,0 122,23,1 144,0,0 156,0,0 107,0,0 69,0,0 103,0,0 33,0,0 32,0,0 166,23,1 51,0,0 71,0,0 69,0,0 130,0,0 2,0,0 158,24,1 32,1,0 32,0,0 21,0,0 80,0,0 53,0,0 23,0,0 38,0,0 27,0,0 26,0,0 30,0,0 177,1,0 48,0,0 27,0,0 152,0,0 27,0,0 34,0,0 18,0,0 110,13,1 27,0,0 55,1,0 53,0,0 21,0,0 71,0,0 47,0,0 94,0,0 22,0,0 65,0,0 61,0,0 208,1,0 104,0,0 49,0,0 34,0,0 45,0,0 33,0,0 74,0,0 38,0,0 30,0,0 95,0,0 85,0,0 51,0,0 48,0,0 40,0,0 18,0,0 106,1,0 41,1,0 157,7,1 23,0,0 152,2,1 156,22,1 50,0,0 46,0,0 60,0,0 39,0,0 119,12,1 152,15,1 145,9,1 32,0,0 53,0,0 157,0,0 129,0,0 48,0,0 180,0,0 24,0,0 63,0,0 46,0,0 33,0,0 137,17,1 221,0,0 31,0,0 26,0,0 26,0,0 162,15,1 39,0,0 119,0,0 80,0,0 44,0,0 57,0,0 127,4,0 41,0,0 95,0,0 155,1,0 159,1,0 62,0,0 56,3,0 16,0,0 113,0,0 31,1,0 47,0,0 114,16,1 161,19,1 155,0,0 102,0,0 153,5,1 155,0,0 40,1,0 38,0,0 66,0,0 49,19,1 26,0,0 54,0,0 95,0,0 67,0,0 163,0,0 63,1,0 158,18,1 32,0,0 24,0,0 45,0,0 40,0,0 15,0,0 22,0,0 33,0,0 45,0,0 38,0,0 27,0,0 55,0,0 40,1,0 38,0,0 163,0,0 158,0,0 116,0,0 40,0,1 84,0,0 92,1,0 45,0,0 37,0,0 74,0,0 70,1,0 44,0,0 202,0,0 29,0,0 137,17,1 63,0,0 115,0,0 289,4,0 11,0,0 155,12,1 136,29,1 26,0,0 116,1,0 37,0,0 91,1,0 82,0,0 140,1,0 88,2,0 15,0,0 84,0,0 42,0,0 36,0,0 38,0,0 67,0,0 23,0,0 112,0,0 42,0,0 35,0,0 32,0,0 132,8,1 24,0,0 44,0,0 110,32,1 29,1,0 115,1,0 47,0,0 29,0,0 79,0,0 32,1,0 40,0,0 116,0,0 88,0,0 50,0,0 105,13,1 21,0,0 24,0,0 66,0,0 85,0,0 26,0,0 42,0,0 48,0,0 8,0,0 175,13,1 160,21,1 29,0,0 80,0,0 121,0,0 138,2,1 70,0,0 20,0,0 168,0,0 103,0,0 25,0,0 46,0,0 124,0,0 111,5,1 38,0,0 124,0,1 106,0,0 17,2,0 46,0,0 22,0,0 121,0,1 157,9,1 148,0,0 43,0,0 65,4,0 162,15,1 28,0,0 96,0,0 48,0,0 88,0,0 125,8,1 62,0,0 47,1,0 40,0,0 30,0,0 38,0,0 97,1,0 22,0,0 43,0,0 4,0,0 146,29,1 147,0,0 97,4,0 74,0,0 104,0,0 22,0,0 154,35,1 51,0,0 95,2,0 149,14,1 28,0,0 27,0,0 27,0,0 140,0,0 155,0,0 110,1,0 34,0,0 49,2,0 23,0,0 50,0,0 159,13,1 24,0,0 148,0,0 88,0,0 23,0,0 30,0,0 146,27,1 66,0,0 147,0,0 93,0,0 141,0,0 42,0,0 281,9,0 126,0,0 64,0,0 36,0,0 69,0,0 87,0,0 38,0,0 67,1,0 74,0,0 141,0,0 53,0,0 45,1,0 88,0,0 135,0,0 65,0,0 43,0,0 26,0,0 23,0,0 155,16,1 26,0,0 61,1,0 84,0,1 153,2,0 53,0,0 37,0,0 113,0,0 135,0,1 165,22,1 44,0,0 33,0,0 55,0,0 3,0,0 151,1,0 28,0,0 38,0,0 28,0,0 121,1,0 80,0,0 112,0,0 47,0,0 155,8,1 59,0,0 44,0,0 81,2,0 32,0,0 157,14,1 119,11,1 157,0,0 276,0,0 83,0,0 156,1,0 79,0,0 60,0,0 130,0,0 56,0,0 50,0,0 87,0,0 65,15,1 91,0,0 159,0,0 132,0,0 159,26,1 8,0,0 22,0,0 65,0,0 29,0,0 33,0,0 83,0,0 35,0,0 51,0,0 42,0,0 41,1,0 158,0,0 117,0,0 157,0,0 48,0,0 32,0,0 29,0,0 36,0,0 64,0,0 154,0,0 102,0,0 62,0,0 64,0,0 99,3,0 104,5,0 86,0,0 120,0,0 140,12,1 160,0,0 46,0,0 31,1,0 34,0,0 9,0,0 73,1,0 73,0,0 140,1,0 29,0,0 42,0,0 169,2,0 70,0,0 68,2,0 29,0,0 48,0,0 156,1,0 33,0,0 80,0,0 159,0,0 176,0,0 52,0,0 73,0,0 23,0,0 183,0,0 121,15,1 66,0,0 144,0,0 145,0,0 37,0,0 147,0,0 84,0,0 243,0,0 118,0,0 276,1,0 106,8,1 41,0,0 47,0,0 28,0,0 29,0,0 78,2,0 242,0,0 61,0,0 22,0,0 21,0,0 152,15,1 109,0,0 119,0,0 74,1,0 146,18,1 65,0,0 53,0,0 73,1,0 48,0,0 22,0,0 85,0,0 27,0,0 45,1,0 26,0,0 79,0,0 23,0,0 159,18,1 372,0,0 163,15,1 28,0,0 77,0,0 69,19,1 33,0,0 42,0,0 28,0,0 12,0,0 67,0,0 95,3,0 42,0,0 40,0,0 162,19,1 24,0,0 145,14,1 49,1,0 21,0,0 110,0,0 33,11,1 109,8,1 44,0,0 54,1,0 53,0,0 40,0,0 103,0,0 155,0,0 23,0,0 37,0,0 4,0,0 26,0,0 51,1,0 34,0,0 31,0,0 39,0,0 39,0,0 54,0,0 139,0,0 51,0,0 46,0,0 48,0,0 46,0,0 94,0,0 23,0,0 162,11,1 110,0,0 27,0,0 29,1,0 23,0,0 195,2,0 135,0,0 41,0,0 83,0,0 22,0,0 107,3,0 56,0,0 30,0,0 82,0,0 22,0,0 90,1,0 64,0,0 56,1,0 23,0,0 32,0,0 25,0,0 156,7,1 69,1,0 13,1,0 22,1,0 189,5,0 158,21,1 73,0,0 37,0,0 159,21,1 111,0,0 44,7,1 80,0,0 73,0,0 27,0,0 133,27,1 31,0,0 120,0,0 105,0,0 327,1,0 42,0,0 160,26,1 135,11,1 22,0,0 44,0,0 149,0,0 136,21,1 47,0,0 33,0,0 119,0,0 37,0,0 96,0,0 31,0,0 49,0,0 22,0,0 141,0,0 147,0,0 24,0,0 32,0,0 89,0,0 117,0,0 115,1,0 96,0,0 15,0,0 39,0,0 60,0,0 99,0,0 161,20,1 461,1,0 30,0,0 33,0,0 158,24,1 64,0,0 23,0,0 45,0,0 105,5,1 29,0,0 160,0,0 41,0,0 105,1,0 84,0,0 40,0,0 29,0,0 34,0,0 38,0,0 10,0,0 102,0,0 43,0,0 24,0,0 46,0,0 153,19,1 55,0,0 120,0,0 59,21,1 100,0,1 204,0,0 38,0,0 28,0,0 38,0,0 97,24,1 72,0,0 37,0,0 130,0,0 185,0,0 106,11,1 122,21,1 30,0,0 119,1,0 54,0,0 33,0,0 91,1,0 169,9,0 89,0,0 47,0,0 69,0,0 57,0,0 59,1,0 22,0,0 133,17,1 52,2,1 160,16,1 156,6,1 118,1,0 44,2,0 54,0,0 30,0,0 41,0,0 47,0,0 40,0,0 27,0,0 75,0,0 46,0,0 65,0,0 32,0,0 50,0,0 108,0,0 30,0,0 12,0,0 84,0,0 5,0,0 99,0,0 28,0,0 157,19,1 147,25,1 56,0,0 78,0,0 150,0,0 41,0,0 25,0,0 121,2,0 111,0,0 142,19,1 95,13,1 48,0,0 152,1,0 368,1,0 96,2,0 22,0,0 165,0,0 29,0,0 25,0,0 116,0,0 191,0,0 62,0,0 56,4,0 158,9,0 31,0,0 31,0,0 87,8,0 111,0,0 158,24,1 157,17,1 38,1,0 48,0,0 94,2,0 38,0,0 101,4,1 65,0,0 75,0,0 50,0,0 37,0,0 164,0,0 112,20,1 124,0,0 44,0,0 88,0,0 26,0,0 31,0,0 38,0,0 45,0,0 29,0,0 24,0,0 86,0,0 31,0,0 24,0,0 15,0,0 45,0,0 24,0,0 17,0,0 18,0,0 129,0,0 24,0,0 153,21,1 109,0,0 35,0,0 47,0,0 159,0,0 154,0,0 91,0,0 42,0,0";
+    var W_LEN = 0.000413, W_DIG = 0.04395, W_B = -0.004822;
+    var pts = RAW.split(" ").map(function (t) {
+      var a = t.split(",");
+      return { s: W_LEN * (+a[0]) + W_DIG * (+a[1]) + W_B, y: +a[2] };
+    });
+    function counts(thr) {
+      var tp = 0, fp = 0, fn = 0, tn = 0;
+      for (var i = 0; i < pts.length; i++) {
+        var flag = pts[i].s >= thr;
+        if (pts[i].y === 1) { if (flag) tp++; else fn++; }
+        else { if (flag) fp++; else tn++; }
+      }
+      return { tp: tp, fp: fp, fn: fn, tn: tn,
+               acc: (tp + tn) / pts.length,
+               prec: (tp + fp) ? tp / (tp + fp) : NaN,
+               rec: tp / (tp + fn) };
+    }
+    var LO = -0.05, HI = 1.60;
+    function gx(t) { return 45 + (t - LO) / (HI - LO) * 490; }
+    function gy(v) { return 190 - v * 165; }
+    var curveP = [], curveR = [];
+    for (var k = 0; k <= 165; k++) {
+      var t = LO + k * (HI - LO) / 165, c = counts(t);
+      if (!isNaN(c.prec)) curveP.push(gx(t) + "," + gy(c.prec));
+      curveR.push(gx(t) + "," + gy(c.rec));
+    }
+    function draw() {
+      var thr = parseFloat($("thr-t").value);
+      $("thr-val").textContent = fmt(thr, 2);
+      var c = counts(thr);
+      var s = '<line x1="45" y1="190" x2="535" y2="190" stroke="#999"/>' +
+              '<line x1="45" y1="20" x2="45" y2="190" stroke="#999"/>' +
+              '<text x="290" y="212" font-size="11" text-anchor="middle" fill="#667">decision threshold</text>' +
+              '<text x="60" y="34" font-size="11" fill="#0AA6B7">precision</text>' +
+              '<text x="60" y="50" font-size="11" fill="#F76900">recall</text>';
+      var g;
+      for (g = 0; g <= 1.5001; g += 0.5) {
+        s += '<line x1="' + gx(g) + '" y1="190" x2="' + gx(g) + '" y2="195" stroke="#999"/>' +
+             '<text x="' + gx(g) + '" y="207" font-size="10" text-anchor="middle" fill="#667">' + fmt(g, 1) + '</text>';
+      }
+      for (g = 0; g <= 1.0001; g += 0.25) {
+        s += '<text x="38" y="' + (gy(g) + 4) + '" font-size="10" text-anchor="end" fill="#667">' + fmt(g, 2) + '</text>';
+      }
+      s += '<polyline fill="none" stroke="#0AA6B7" stroke-width="2.5" points="' + curveP.join(" ") + '"/>';
+      s += '<polyline fill="none" stroke="#F76900" stroke-width="2.5" points="' + curveR.join(" ") + '"/>';
+      s += '<line x1="' + gx(thr) + '" y1="20" x2="' + gx(thr) + '" y2="190" stroke="#000E54" stroke-width="1.5" stroke-dasharray="5,4"/>';
+      if (!isNaN(c.prec)) s += '<circle cx="' + gx(thr) + '" cy="' + gy(c.prec) + '" r="5" fill="#0AA6B7"/>';
+      s += '<circle cx="' + gx(thr) + '" cy="' + gy(c.rec) + '" r="5" fill="#F76900"/>';
+      $("thr-svg").innerHTML = s;
+      $("thr-out").textContent =
+        "threshold " + fmt(thr, 2) + " on " + pts.length + " held-out messages (150 spam)\n" +
+        "  flagged spam (TP)  " + c.tp + "        missed spam (FN)  " + c.fn + "\n" +
+        "  flagged ham  (FP)  " + c.fp + "        left alone   (TN)  " + c.tn + "\n" +
+        "  accuracy  " + fmt(100 * c.acc, 2) + "%      always-ham baseline 86.56%\n" +
+        "  precision " + (isNaN(c.prec) ? "  n/a  " : fmt(100 * c.prec, 2) + "%") +
+        "      recall " + fmt(100 * c.rec, 2) + "%";
+    }
+    $("thr-t").addEventListener("input", draw);
+    $("thr-half").addEventListener("click", function () { $("thr-t").value = "0.50"; draw(); });
+    draw();
+  })();
+
+  /* ---------- 4. Softmax and cross-entropy ---------- */
+  (function () {
+    var NAMES = ["benign", "port-scan", "brute-force", "exfil"];
+    function draw() {
+      var z = $("sm-z").value.split(",").map(function (v) { return parseFloat(v); });
+      if (z.length !== 4 || z.some(isNaN)) {
+        $("sm-out").textContent = "enter four numbers, comma separated";
+        $("sm-bars").innerHTML = "";
+        return;
+      }
+      var e = z.map(Math.exp);
+      var sum = e.reduce(function (a, b) { return a + b; }, 0);
+      var p = e.map(function (v) { return v / sum; });
+      var k = parseInt($("sm-k").value, 10);
+      var bars = "", rows = "", i;
+      for (i = 0; i < 4; i++) {
+        bars += '<div class="bar-row"><span class="blab">' + NAMES[i] + '</span>' +
+          '<span class="btrack"><span class="bfill' + (i === k ? "" : " cut") + '" style="width:' + (p[i] * 100) + '%"></span></span>' +
+          '<span class="bval">' + fmt(p[i], 4) + '</span></div>';
+        rows += "  " + NAMES[i].padEnd(13) + ((z[i] > 0 ? "+" : "") + fmt(z[i], 2)).padStart(6) +
+                fmt(e[i], 6).padStart(14) + fmt(p[i], 4).padStart(12) + "\n";
+      }
+      $("sm-bars").innerHTML = bars;
+      $("sm-out").textContent =
+        "  " + "class".padEnd(13) + "z_k".padStart(6) + "e^{z_k}".padStart(14) + "p_k".padStart(12) + "\n" + rows +
+        "  sum of e^{z_k} = " + fmt(sum, 6) + "\n" +
+        "true class = " + NAMES[k] + "   p = " + fmt(p[k], 4) +
+        "   cross-entropy = -ln p = " + fmt(-Math.log(p[k]), 4);
+    }
+    $("sm-z").addEventListener("input", draw);
+    $("sm-k").addEventListener("change", draw);
+    draw();
+  })();
+
+  /* ---------- 5. Base-rate calculator ---------- */
+  (function () {
+    var N = 1000000;
+    function draw() {
+      var one = parseFloat($("br-prev").value),
+          tpr = parseFloat($("br-tpr").value) / 100,
+          fpr = parseFloat($("br-fpr").value) / 100;
+      if (isNaN(one) || one < 1 || isNaN(tpr) || isNaN(fpr) || tpr < 0 || tpr > 1 || fpr < 0 || fpr > 1) {
+        $("br-out").textContent = "prevalence >= 1, rates between 0 and 100";
+        $("br-table").innerHTML = "";
+        return;
+      }
+      var atk = N / one, ben = N - atk;
+      var tp = atk * tpr, fn = atk - tp, fp = ben * fpr, tn = ben - fp;
+      var ppv = (tp + fp) > 0 ? tp / (tp + fp) : NaN;
+      function r(x) { return commas(Math.round(x)); }
+      $("br-table").innerHTML =
+        '<table><tr><th></th><th>flagged</th><th>not flagged</th></tr>' +
+        '<tr><td>' + r(atk) + ' attacks</td><td>' + r(tp) + '</td><td>' + r(fn) + '</td></tr>' +
+        '<tr><td>' + r(ben) + ' benign</td><td>' + r(fp) + '</td><td>' + r(tn) + '</td></tr></table>';
+      $("br-out").textContent =
+        "out of " + commas(N) + " events, " + r(tp + fp) + " alerts fire\n" +
+        "an alert is a real attack  " + r(tp) + " / (" + r(tp) + " + " + r(fp) + ") = " +
+        (isNaN(ppv) ? "n/a" : fmt(100 * ppv, 2) + "%") + "   (precision)\n" +
+        "of the real attacks, " + fmt(100 * tpr, 2) + "% were caught   (recall)";
+    }
+    ["br-prev", "br-tpr", "br-fpr"].forEach(function (id) { $(id).addEventListener("input", draw); });
+    draw();
+  })();
+
+  /* ---------- 6. Parameter counter ---------- */
+  (function () {
+    function draw() {
+      var d = parseInt($("pc-d").value, 10),
+          h = parseInt($("pc-h").value, 10),
+          m = parseInt($("pc-m").value, 10);
+      if (isNaN(d) || isNaN(h) || isNaN(m) || d < 1 || h < 0 || m < 1) {
+        $("pc-out").textContent = "d >= 1, H >= 0, m >= 1";
+        return;
+      }
+      var first, second, total, lines;
+      if (h === 0) {
+        first = m * d; second = m;
+        total = first + second;
+        lines = "no hidden layer: one linear map straight to the output\n" +
+                "  W  " + m + " x " + d + "  = " + commas(first) + "\n" +
+                "  b  " + m + "        = " + commas(second) + "\n" +
+                "  total = " + commas(total);
+      } else {
+        first = h * d;
+        second = m * h;
+        total = first + h + second + m;
+        lines = "one hidden layer of width " + h + "\n" +
+                "  W1  " + h + " x " + d + "  = " + commas(first) + "\n" +
+                "  b1  " + h + "        = " + commas(h) + "\n" +
+                "  W2  " + m + " x " + h + "  = " + commas(second) + "\n" +
+                "  b2  " + m + "        = " + commas(m) + "\n" +
+                "  total = " + commas(total) +
+                "     first matrix is " + fmt(100 * first / total, 1) + "% of it";
+      }
+      $("pc-out").textContent = lines;
+    }
+    ["pc-d", "pc-h", "pc-m"].forEach(function (id) { $(id).addEventListener("input", draw); });
+    $("pc-b1").addEventListener("click", function () { $("pc-d").value = "2000"; $("pc-h").value = "0"; $("pc-m").value = "1"; draw(); });
+    $("pc-b2").addEventListener("click", function () { $("pc-d").value = "2000"; $("pc-h").value = "16"; $("pc-m").value = "1"; draw(); });
+    draw();
+  })();
+});
+</script>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <!-- <h2 class="footer-heading">CIS400</h2> -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>CIS400</li>
+          <li><a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
