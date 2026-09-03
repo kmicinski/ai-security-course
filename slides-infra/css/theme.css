@@ -154,6 +154,18 @@
   list-style: none;
 }
 
+/* A blank line between bullets makes CommonMark emit a "loose" list, wrapping
+   each item's text in <p>. That would push the text below the ▸ marker and add
+   paragraph margins, so a stray blank line in a deck silently wrecks the slide.
+   Render loose items like tight ones. */
+.reveal li > p {
+  margin: 0;
+}
+
+.reveal li > p:first-child {
+  display: inline;
+}
+
 .reveal ul li::before {
   content: "▸";
   color: var(--su-orange);

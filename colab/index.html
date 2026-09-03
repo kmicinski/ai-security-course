@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Using Google Colab</title>
+  <meta name="description" content="CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University">
+
+  <!-- The stylesheet asks for Open Sans at weight 300 with bold emphasis, but the
+       family was never actually loaded, so every weight resolved to the same
+       fallback face and bold text rendered indistinguishable from body text. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://kmicinski.com/ai-security-course/css/main.css">
+  <link rel="canonical" href="https://kmicinski.com/ai-security-course/colab/">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+</head>
+
+  <body>
+
+    <header class="site-header">
+  <div class="wrapper site-header__inner">
+
+    <a class="site-title" href="/ai-security-course/">
+      <span class="site-title__id">CIS 400</span>
+      <span class="site-title__sep">/</span>
+      <span class="site-title__name">Cybersecurity &amp; AI</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-link"
+         href="/ai-security-course/#schedule">Schedule</a>
+      <a class="nav-link"
+         href="/ai-security-course/syllabus">Syllabus</a>
+      <a class="nav-link"
+         href="/ai-security-course/resources">Resources</a>
+      <a class="nav-link is-current"
+         href="/ai-security-course/colab">Colab</a>
+    </nav>
+
+  </div>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <h1 id="using-google-colab">Using Google Colab</h1>
+
+<p>Several assignments and in-class demos in this course are Jupyter notebooks that
+need a GPU. You do not need to own one, and you should not spend an afternoon
+installing CUDA on your laptop. Google Colab gives you a free GPU in the
+browser, and every notebook in this course is built to run there without any
+setup beyond what is on this page.</p>
+
+<p>All you need is a Google account and Chrome, Firefox, or Safari.</p>
+
+<h2 id="what-colab-is">What Colab is</h2>
+
+<p>Colab runs a Python notebook on a Google machine and shows it to you in a
+browser tab. A notebook is a document of <em>cells</em>: text cells (like this page)
+and code cells you can run, in order, with the output appearing underneath.</p>
+
+<p>The machine your notebook runs on is called a <strong>session</strong>. It is temporary.
+Anything you install or download lives only as long as that session, and Google
+will shut it down if you close the tab or leave it idle for a while. Your
+notebook file is saved; the machine it ran on is not.</p>
+
+<h2 id="opening-a-course-notebook">Opening a course notebook</h2>
+
+<p>Every notebook link on the <a href="/ai-security-course/#schedule">schedule</a> says
+<strong>run in Colab</strong>. Click it and the notebook opens, ready to run. That is the
+whole procedure.</p>
+
+<p>Two things to do immediately after it opens:</p>
+
+<ol>
+  <li><strong>Save your own copy.</strong> <code class="language-plaintext highlighter-rouge">File → Save a copy in Drive</code>. The link opens a
+read-only view of the course copy; without your own copy, your work is not
+saved anywhere. The copy lands in your Google Drive under <code class="language-plaintext highlighter-rouge">Colab Notebooks</code>.</li>
+  <li><strong>Turn on the GPU.</strong> See the next section. Do this before running any cells.</li>
+</ol>
+
+<h2 id="turning-on-the-gpu">Turning on the GPU</h2>
+
+<p>This is the step people forget, and it is the reason a notebook that should
+finish in three minutes appears to hang.</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">Runtime → Change runtime type</code></li>
+  <li>Under <strong>Hardware accelerator</strong>, choose <strong>T4 GPU</strong></li>
+  <li><code class="language-plaintext highlighter-rouge">Save</code></li>
+</ol>
+
+<p>Colab will restart the session. That is expected — you have not lost anything,
+you just need to start running cells from the top again.</p>
+
+<p>If you skip this step, Colab silently gives you a slower machine with no GPU
+and says nothing about it. The course notebooks check for you: near the top,
+each one runs <code class="language-plaintext highlighter-rouge">nvidia-smi</code> and prints the name of the graphics card it found.
+If it prints a card and its memory, you are set. If it warns that no GPU is
+attached, go back and do the three steps above.</p>
+
+<h2 id="running-the-notebook">Running the notebook</h2>
+
+<p><code class="language-plaintext highlighter-rouge">Runtime → Run all</code> executes every cell from the top. The first run of a
+notebook that downloads a model takes a few minutes — it is fetching several
+gigabytes of weights — and afterwards the model is cached for the rest of the
+session, so later cells are fast.</p>
+
+<p>You can also run cells one at a time with the play button on the left of each
+cell, or <strong>Shift+Enter</strong>. Do this in order the first time through. Cells are not
+independent: a cell that uses <code class="language-plaintext highlighter-rouge">model</code> will fail if you have not run the cell
+that defines it.</p>
+
+<p>A short vertical progress bar to the left of a cell means it is still running.
+Wait for it to finish before running the next one.</p>
+
+<h2 id="when-something-goes-wrong">When something goes wrong</h2>
+
+<p><strong>“NameError: name ‘model’ is not defined.”</strong> You ran cells out of order, or the
+session restarted underneath you. <code class="language-plaintext highlighter-rouge">Runtime → Run all</code> and let it go from the
+top.</p>
+
+<p><strong>“CUDA out of memory.”</strong> The GPU ran out of room. Each notebook says which
+setting to lower — usually a batch size. Lower it, then <code class="language-plaintext highlighter-rouge">Runtime → Restart
+session</code> and run again from the top. Restarting is required; the memory is not
+released otherwise.</p>
+
+<p><strong>Everything is extremely slow.</strong> You almost certainly do not have a GPU
+attached. Check the <code class="language-plaintext highlighter-rouge">nvidia-smi</code> output near the top of the notebook, and see
+the GPU section above.</p>
+
+<p><strong>The session disconnected.</strong> Colab reclaims idle machines, and free sessions
+have a time limit. Reconnect and <code class="language-plaintext highlighter-rouge">Runtime → Run all</code>. Anything downloaded during
+the old session is gone and will download again.</p>
+
+<p><strong>A cell has been running for a very long time.</strong> Compare against the runtime
+the notebook states. If it is far over, interrupt it (<code class="language-plaintext highlighter-rouge">Runtime → Interrupt
+execution</code>) rather than waiting indefinitely, and check the GPU first.</p>
+
+<h2 id="free-tier-limits-and-how-not-to-hit-them">Free-tier limits, and how not to hit them</h2>
+
+<p>Free Colab is generous but rationed. You get a GPU when one is available, for a
+few hours at a time, with a daily cap. Heavy use in the afternoon can mean no
+GPU that evening.</p>
+
+<p>Three habits keep you out of trouble:</p>
+
+<ul>
+  <li><strong>Do not leave notebooks running.</strong> When you are done, <code class="language-plaintext highlighter-rouge">Runtime → Disconnect
+and delete runtime</code>. Idle sessions burn your quota.</li>
+  <li><strong>Do not start the assignment the night it is due.</strong> If you are rate-limited
+at 11pm, there is no appeal, and “Colab would not give me a GPU” is not an
+extension.</li>
+  <li><strong>Develop on small settings.</strong> Every notebook has a knob for how much work it
+does — a number of test cases, a batch size. Get the notebook running
+end-to-end on a small value first, then turn it up once for the real run.</li>
+</ul>
+
+<p>Colab Pro exists and is not required for anything in this course. Do not buy it
+on my account.</p>
+
+<h2 id="submitting-work">Submitting work</h2>
+
+<p>Unless an assignment says otherwise, submit the notebook itself, with the output
+still in it: <code class="language-plaintext highlighter-rouge">File → Download → Download .ipynb</code>. A notebook whose cells have
+been cleared is not evidence that anything ran.</p>
+
+<p>If you were asked for a write-up as well, put it in text cells inside the same
+notebook rather than in a separate document.</p>
+
+<h2 id="working-locally-instead">Working locally instead</h2>
+
+<p>You are welcome to run these notebooks on your own machine if you have an NVIDIA
+GPU and want to. Each example directory has a <code class="language-plaintext highlighter-rouge">requirements.txt</code>, and the
+notebooks are ordinary <code class="language-plaintext highlighter-rouge">.ipynb</code> files. Nothing in the course depends on Colab
+specifically — it is there so that no one is blocked by hardware.</p>
+
+<p>If you go this route, do it in a virtual environment, and do not expect help
+debugging a local CUDA install during office hours. Colab is the supported path.</p>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <!-- <h2 class="footer-heading">CIS400</h2> -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>CIS400</li>
+          <li><a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

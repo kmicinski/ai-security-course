@@ -1,0 +1,4 @@
+# verify.py needs none of this: it runs on the standard library alone.
+# Listed only for editing the notebook by hand in Jupyter, which you should not
+# be doing -- edit the modules and rerun build_notebook.py.
+nbformat>=5.9

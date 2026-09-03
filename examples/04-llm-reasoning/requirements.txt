@@ -1,0 +1,6 @@
+# Only needed to run the modules locally. The Colab notebook installs what it
+# needs in its first cell and needs nothing from this file.
+torch>=2.2
+transformers>=4.45
+accelerate>=0.30
+matplotlib>=3.7

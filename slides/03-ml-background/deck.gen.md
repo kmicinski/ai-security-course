@@ -75,7 +75,7 @@
                      (slides/06b-neural-networks). When a student asks how
                      the gradients are computed, name Week 8 and move on.
     Week 9        -> adversarial examples and evasion
-                     (slides/07-adversarial-ml-network).
+                     (slides/08-adversarial-ml-network).
     Weeks 10-11   -> language models entirely: tokens, attention, training,
                      agents. Nothing about them belongs in this deck.
     Weeks 12-14   -> attacks on AI systems, and defenses.

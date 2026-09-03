@@ -67,16 +67,21 @@
       // them with KaTeX, once the markdown slides are in the DOM.
       function renderMath() {
         if (typeof katex === "undefined") return;
+        let rendered = 0;
         document.querySelectorAll(".reveal .ktx:not([data-done])").forEach((el) => {
           try {
             const b = atob(el.getAttribute("data-tex"));
             const tex = new TextDecoder().decode(Uint8Array.from(b, (c) => c.charCodeAt(0)));
             katex.render(tex, el, { displayMode: el.dataset.d === "1", throwOnError: false });
             el.setAttribute("data-done", "1");
+            rendered++;
           } catch (e) {
             /* leave the span; a decode/render failure should not break the deck */
           }
         });
+        // Math grows the slide after Reveal measured it; re-layout so tall
+        // equation slides stay centred instead of being pushed off the bottom.
+        if (rendered) Reveal.layout();
       }
       Reveal.on("ready", renderMath);
       // Fallback in case KaTeX's deferred script loads after "ready" fires.
