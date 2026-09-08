@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Lab — Spam Classification, Four Ways</title>
+  <meta name="description" content="CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University">
+
+  <!-- The stylesheet asks for Open Sans at weight 300 with bold emphasis, but the
+       family was never actually loaded, so every weight resolved to the same
+       fallback face and bold text rendered indistinguishable from body text. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://kmicinski.com/ai-security-course/css/main.css">
+  <link rel="canonical" href="https://kmicinski.com/ai-security-course/labs/spam-classification/">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+</head>
+
+  <body>
+
+    <header class="site-header">
+  <div class="wrapper site-header__inner">
+
+    <a class="site-title" href="/ai-security-course/">
+      <span class="site-title__id">CIS 400</span>
+      <span class="site-title__sep">/</span>
+      <span class="site-title__name">Cybersecurity &amp; AI</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-link"
+         href="/ai-security-course/#schedule">Schedule</a>
+      <a class="nav-link"
+         href="/ai-security-course/syllabus">Syllabus</a>
+      <a class="nav-link"
+         href="/ai-security-course/resources">Resources</a>
+      <a class="nav-link"
+         href="/ai-security-course/colab">Colab</a>
+    </nav>
+
+  </div>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <p>You will train four spam classifiers on real SMS messages and compare them. The
+point is not the accuracy score. The point is to see, on a real dataset, what a
+model is, how training works, and why “99% accurate” is a nearly useless claim
+until you look at precision and recall.</p>
+
+<p>There are two versions of the code. They use the same features and produce
+almost the same numbers.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">spam_lab.py</code> is pure Python. No installs. It runs anywhere you have
+<code class="language-plaintext highlighter-rouge">python3</code>, including a locked-down lab machine.</li>
+  <li><code class="language-plaintext highlighter-rouge">spam_torch.py</code> is the same thing in PyTorch, so you can run it on your
+laptop’s GPU. Setup for a MacBook Pro is below.</li>
+</ul>
+
+<h2 id="run-it-no-setup">Run it (no setup)</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 spam_lab.py
+</code></pre></div></div>
+
+<p>That trains all four models and prints a report in about one second. To score
+your own message:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 spam_lab.py --classify "WINNER!! You have won a £1000 prize. Txt CLAIM to 80086"
+</code></pre></div></div>
+
+<h2 id="the-data">The data</h2>
+
+<p>The <a href="data/UCI-README.txt">SMS Spam Collection</a>: 5,574 real text messages, hand
+labeled. 747 are spam, 4,827 are ham (legitimate). So <strong>13.4% of messages are
+spam</strong>. Keep that number in mind; it decides how to read every result below.</p>
+
+<p>A few real examples from the file:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ham    Ok lar... Joking wif u oni...
+ham    Nah I don't think he goes to usf, he lives around here though
+spam   Free entry in 2 a wkly comp to win FA Cup final tkts 21st May 2005. Text FA to 87121...
+spam   WINNER!! As a valued network customer you have been selected to receive a £900 prize...
+</code></pre></div></div>
+
+<p>We split the data 80/20 into a training set (4,458 messages) and a test set
+(1,116). Every model learns from the training set only. Every number reported is
+measured on the test set, which the model never saw during training. This is the
+one rule you cannot break: grading a model on the data it trained on tells you
+nothing.</p>
+
+<h2 id="features-bag-of-words">Features: bag of words</h2>
+
+<p>A model does arithmetic, not English, so each message becomes a vector of word
+counts. We take the 2,000 most common tokens in the training set, and represent
+a message by how many times each of those tokens appears. We keep <code class="language-plaintext highlighter-rouge">!</code>, <code class="language-plaintext highlighter-rouge">$</code>, <code class="language-plaintext highlighter-rouge">£</code>,
+<code class="language-plaintext highlighter-rouge">#</code>, and <code class="language-plaintext highlighter-rouge">?</code> as tokens, because they carry a lot of the spam signal and a plain
+word-splitter would throw them away.</p>
+
+<p>That is the whole featurizer. <code class="language-plaintext highlighter-rouge">tokenize()</code> and <code class="language-plaintext highlighter-rouge">build_vocab()</code> in <code class="language-plaintext highlighter-rouge">spam_lab.py</code>
+are about fifteen lines together.</p>
+
+<h2 id="the-four-models">The four models</h2>
+
+<p>All four take the same word-count vector and produce a spam score. They differ
+in the shape of the function and how they are trained.</p>
+
+<p><strong>Linear regression.</strong> Fit a straight line to the 0/1 labels by least squares,
+then call anything scoring above 0.5 spam. This is the wrong tool: it fits a
+line to a yes/no answer, so its output is an unbounded score, not a probability.
+It also destabilizes easily. Try <code class="language-plaintext highlighter-rouge">--epochs 25</code> with a larger learning rate and
+watch the F1 fall apart. It is here so you can see why we reach for the next
+model.</p>
+
+<p><strong>Logistic regression.</strong> Same linear score, but squashed through a sigmoid into
+a real probability, and trained by gradient descent on cross-entropy. This is
+the update derived in lecture: the gradient of the loss with respect to the
+score is just <code class="language-plaintext highlighter-rouge">(predicted − actual)</code>. It is fast, and its weights are readable
+(see below).</p>
+
+<p><strong>Naive Bayes.</strong> Count how often each word shows up in spam versus ham, apply
+Bayes’ rule, assume words are independent. This is the classic spam-filter
+method, the one behind Paul Graham’s “A Plan for Spam.” No gradient descent at
+all, just counting.</p>
+
+<p><strong>Neural network.</strong> One hidden layer of 16 ReLU units, trained by
+backpropagation. This is the same machinery as the neural-networks lecture, only
+wider. Because messages are short, the features are sparse, so even this trains
+in a few seconds of pure Python.</p>
+
+<h2 id="results">Results</h2>
+
+<p>From an actual run of <code class="language-plaintext highlighter-rouge">python3 spam_lab.py</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                 accuracy  precision  recall    F1
+linear             98.12     99.24    86.67    92.53
+logistic           98.21     97.79    88.67    93.01
+naive Bayes        98.75     97.89    92.67    95.21
+neural net         98.39     96.48    91.33    93.84
+</code></pre></div></div>
+
+<p>Read these carefully, because the accuracy column is a trap.</p>
+
+<ul>
+  <li>A model that labels <strong>everything</strong> ham, without looking at the message at all,
+scores <strong>86.6% accuracy</strong> on this data, because 86.6% of messages are ham. So
+“98% accurate” is only about 11 points better than a model that does nothing.</li>
+  <li><strong>Precision</strong> is: of the messages we flagged as spam, how many really were.
+High precision means few false alarms. A false alarm here means a real message
+sent to the spam folder, which is worse than missing a spam.</li>
+  <li><strong>Recall</strong> is: of the real spam, how much we caught. Naive Bayes has the best
+recall (92.7%) and the best F1, so on this dataset it is the model to beat.</li>
+  <li>Linear regression has the highest precision but the worst recall: it is
+cautious, so it rarely false-alarms but misses more spam.</li>
+</ul>
+
+<p>This is the base-rate lesson from lecture, made concrete. When one class is rare,
+accuracy is dominated by the common class and hides everything that matters.</p>
+
+<h2 id="what-logistic-regression-learned">What logistic regression learned</h2>
+
+<p>The model’s weights are just numbers attached to words. Large positive weight
+means “this word pushes toward spam.” From the same run:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>most spammy tokens:  £(+3.36) text(+2.71) txt(+2.30) 150p(+2.22) ringtone(+2.14) reply(+2.06) stop(+1.93) uk(+1.91)
+most hammy tokens:   my(-1.39) gt(-1.37) lt(-1.36) #(-1.15) da(-1.13) i'll(-1.10) amp(-1.07) him(-1.07)
+</code></pre></div></div>
+
+<p>Nobody told the model that <code class="language-plaintext highlighter-rouge">£</code>, <code class="language-plaintext highlighter-rouge">txt</code>, <code class="language-plaintext highlighter-rouge">150p</code>, and <code class="language-plaintext highlighter-rouge">ringtone</code> are spammy. It
+found them by counting. The hammy list is mostly ordinary conversational words
+(<code class="language-plaintext highlighter-rouge">my</code>, <code class="language-plaintext highlighter-rouge">him</code>, <code class="language-plaintext highlighter-rouge">i'll</code>). This readability is why logistic regression is still
+deployed: you can inspect exactly why a message was flagged.</p>
+
+<h2 id="sample-predictions">Sample predictions</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ python3 spam_lab.py --classify "WINNER!! You have won a £1000 prize. Txt CLAIM to 80086 now"
+[logistic regression]  P(spam) = 1.000  -&gt;  SPAM
+
+$ python3 spam_lab.py --classify "hey are we still on for lunch tomorrow?"
+[logistic regression]  P(spam) = 0.002  -&gt;  ham
+</code></pre></div></div>
+
+<p>The full run also prints the model’s mistakes. The interesting misses are spam
+that avoids the usual vocabulary, and ham that happens to use it. That is exactly
+where an attacker who wanted to slip past the filter would aim, which is the
+subject of the adversarial-ML week: the model’s weights are a map, and anyone can
+read it.</p>
+
+<h2 id="the-security-reframe">The security reframe</h2>
+
+<p>Every step here is an attack surface later in the course.</p>
+
+<ul>
+  <li>The training set is an input. Whoever can add labeled messages to it can move
+the weights. That is data poisoning.</li>
+  <li>The features and weights are legible. An attacker can see which words to avoid
+and which to add. That is evasion.</li>
+  <li>The reported accuracy is meaningless without the base rate. A vendor quoting
+“99% accurate” on a rare-event detector is quoting a number a do-nothing model
+nearly matches. That is the hype filter.</li>
+</ul>
+
+<hr />
+
+<h2 id="the-pytorch-version-macbook-pro">The PyTorch version (MacBook Pro)</h2>
+
+<p><code class="language-plaintext highlighter-rouge">spam_torch.py</code> reuses the same featurizer and trains the linear, logistic, and
+neural-net models with PyTorch. It picks the fastest device your machine has:
+the Apple GPU (MPS) on Apple Silicon, CUDA on an NVIDIA box, or the CPU.</p>
+
+<p>Setup:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cd labs/spam-classification
+./setup_macbook.sh          # creates .venv, installs torch, reports the device
+source .venv/bin/activate
+python spam_torch.py
+</code></pre></div></div>
+
+<p>Or with make:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make setup     # one time
+make torch      # train the PyTorch models
+make run        # the pure-Python version, no venv needed
+</code></pre></div></div>
+
+<p>Notes for a MacBook Pro:</p>
+
+<ul>
+  <li>On Apple Silicon (M1/M2/M3/M4), the default <code class="language-plaintext highlighter-rouge">pip install torch</code> wheel includes
+the MPS backend. The script uses it automatically and prints
+<code class="language-plaintext highlighter-rouge">device: mps</code>. No CUDA, no special index URL.</li>
+  <li>On an Intel Mac, PyTorch runs on the CPU. This dataset is small, so a run
+still finishes in seconds.</li>
+  <li>If <code class="language-plaintext highlighter-rouge">setup_macbook.sh</code> warns that your Python is not <code class="language-plaintext highlighter-rouge">arm64</code>, you installed an
+Intel build of Python under Rosetta. Install an arm64 <code class="language-plaintext highlighter-rouge">python3</code> (python.org or
+Homebrew) to get the GPU backend.</li>
+  <li>Force a device if you want to compare: <code class="language-plaintext highlighter-rouge">python spam_torch.py --device cpu</code>.</li>
+</ul>
+
+<p>The PyTorch numbers will not match the pure-Python numbers to the decimal,
+because the optimizer (Adam), batching, and weight initialization differ. They
+land in the same place: high-90s accuracy, Naive Bayes and logistic regression
+near the top, linear regression cautious and behind. If they diverge wildly, that
+is a bug worth finding, not a result worth trusting.</p>
+
+<h2 id="things-to-try">Things to try</h2>
+
+<ul>
+  <li>Change <code class="language-plaintext highlighter-rouge">--max-features</code>. Does a bigger vocabulary help, or just slow it down?</li>
+  <li>The dataset is 13.4% spam. Weight the loss toward the rare class
+(<code class="language-plaintext highlighter-rouge">pos_weight</code> in <code class="language-plaintext highlighter-rouge">BCEWithLogitsLoss</code>) and watch recall rise and precision fall.
+Which error is worse for a spam filter? For a malware detector?</li>
+  <li>Write a message that you think is obviously spam but that the model misses.
+What did you avoid? You have just done manual evasion.</li>
+</ul>
+
+<h2 id="attribution">Attribution</h2>
+
+<p>Dataset: Almeida, T.A., Gómez Hidalgo, J.M., Yamakami, A. “Contributions to the
+Study of SMS Spam Filtering: New Collection and Results.” <em>DOCENG’11</em>, 2011.
+Distributed for research and education; see <code class="language-plaintext highlighter-rouge">data/UCI-README.txt</code>.</p>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <!-- <h2 class="footer-heading">CIS400</h2> -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>CIS400</li>
+          <li><a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

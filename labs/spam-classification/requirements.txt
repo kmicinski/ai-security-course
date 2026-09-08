@@ -1,0 +1,6 @@
+# PyTorch path only. The pure-Python lab (spam_lab.py) needs nothing here.
+#
+# On Apple Silicon (M1/M2/M3/M4) the default PyPI wheel is MPS-enabled, so the
+# torch GPU backend "just works" -- no extra index URL needed.
+# On an Intel Mac you get a CPU build, which is fine for this lab.
+torch>=2.2

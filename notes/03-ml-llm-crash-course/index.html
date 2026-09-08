@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Lecture Notes — An ML/LLM Crash Course for Security People</title>
+  <meta name="description" content="CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University">
+
+  <!-- The stylesheet asks for Open Sans at weight 300 with bold emphasis, but the
+       family was never actually loaded, so every weight resolved to the same
+       fallback face and bold text rendered indistinguishable from body text. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://kmicinski.com/ai-security-course/css/main.css">
+  <link rel="canonical" href="https://kmicinski.com/ai-security-course/notes/03-ml-llm-crash-course/">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+</head>
+
+  <body>
+
+    <header class="site-header">
+  <div class="wrapper site-header__inner">
+
+    <a class="site-title" href="/ai-security-course/">
+      <span class="site-title__id">CIS 400</span>
+      <span class="site-title__sep">/</span>
+      <span class="site-title__name">Cybersecurity &amp; AI</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-link"
+         href="/ai-security-course/#schedule">Schedule</a>
+      <a class="nav-link"
+         href="/ai-security-course/syllabus">Syllabus</a>
+      <a class="nav-link"
+         href="/ai-security-course/resources">Resources</a>
+      <a class="nav-link"
+         href="/ai-security-course/colab">Colab</a>
+    </nav>
+
+  </div>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <!--
+  Interactive lecture notes for Week 2 (deck 03-ml-llm-crash-course).
+  This is a raw-HTML Jekyll page (NOT markdown) so that KaTeX math and the
+  inline JS widgets are never mangled by kramdown. Math is written between
+  $ ... $ / $$ ... $$ and rendered client-side by KaTeX auto-render (CDN,
+  loaded at the bottom of this file). All widgets are self-contained vanilla
+  JS in the single script block at the end; no external JS beyond KaTeX.
+  Companion artifacts: slides/03-ml-llm-crash-course (main deck, ~60 slides)
+  and slides/03-ml-llm-crash-course (appendix deck).
+-->
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<style>
+  .notes-wrap { max-width: 860px; margin: 0 auto; font-size: 1.02rem; line-height: 1.6; }
+  .notes-wrap h1 { color: #000E54; margin-top: 0.5em; }
+  .notes-wrap h2 { color: #000E54; border-bottom: 3px solid #F76900; padding-bottom: 0.2em; margin-top: 2.2em; }
+  .notes-wrap h3 { color: #000E54; margin-top: 1.6em; }
+  .notes-wrap pre { background: #f6f5f0; border: 1px solid #e2e0d8; border-radius: 6px; padding: 0.8em 1em; overflow-x: auto; font-size: 0.85em; line-height: 1.45; }
+  .notes-wrap code { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+  .notes-wrap p > code, .notes-wrap li > code { background: #f2f1ec; padding: 0.08em 0.3em; border-radius: 4px; font-size: 0.88em; }
+  .co { border-left: 4px solid; border-radius: 4px; padding: 0.6em 0.9em; margin: 1em 0; background: #fafafa; }
+  .co.threat  { border-color: #c0392b; background: #fdf3f2; }
+  .co.defense { border-color: #1e824c; background: #f1f9f4; }
+  .co.note    { border-color: #0AA6B7; background: #f0fafb; }
+  .widget { border: 2px solid #000E54; border-radius: 10px; padding: 1em 1.2em 1.2em; margin: 1.4em 0; background: #fcfcff; }
+  .widget h4 { margin: 0 0 0.2em; color: #F76900; font-size: 1.02em; }
+  .widget .whint { color: #667; font-size: 0.85em; margin: 0 0 0.7em; }
+  .widget label { font-size: 0.9em; margin-right: 0.9em; white-space: nowrap; }
+  .widget input[type=range] { vertical-align: middle; width: 160px; accent-color: #F76900; }
+  .widget input[type=text] { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; padding: 0.15em 0.35em; border: 1px solid #bbb; border-radius: 4px; }
+  .widget button { background: #000E54; color: #fff; border: 0; border-radius: 5px; padding: 0.3em 0.9em; font-size: 0.88em; cursor: pointer; margin-right: 0.5em; }
+  .widget button:hover { background: #F76900; }
+  .widget .wout { font-family: ui-monospace, Menlo, monospace; font-size: 0.85em; background: #f6f5f0; border-radius: 5px; padding: 0.5em 0.8em; margin-top: 0.7em; white-space: pre-wrap; }
+  .widget svg { max-width: 100%; height: auto; display: block; margin-top: 0.5em; }
+  .widget table { font-size: 0.85em; border-collapse: collapse; margin-top: 0.6em; }
+  .widget table td, .widget table th { border: 1px solid #ddd; padding: 0.2em 0.55em; font-family: ui-monospace, Menlo, monospace; }
+  .bar-row { display: flex; align-items: center; gap: 0.5em; margin: 0.15em 0; font-family: ui-monospace, Menlo, monospace; font-size: 0.82em; }
+  .bar-row .blab { width: 5.5em; text-align: right; }
+  .bar-row .btrack { flex: 1; background: #eee; border-radius: 3px; height: 14px; position: relative; }
+  .bar-row .bfill { height: 100%; border-radius: 3px; background: #0AA6B7; }
+  .bar-row .bfill.cut { background: #ccc; }
+  .bar-row .bval { width: 4.5em; }
+  .toc { background: #f6f8ff; border: 1px solid #dfe4f5; border-radius: 8px; padding: 0.8em 1.4em; }
+  .toc a { text-decoration: none; }
+  .notes-wrap .srcline { color: #777; font-size: 0.83em; }
+</style>
+
+<div class="notes-wrap">
+
+<div class="ai-disclosure">
+  <p class="ai-disclosure__title">Generated by Claude!</p>
+  <p><strong>Attention students:</strong> Kris <em>generated</em> these notes via the
+  lecture material. I take AI disclosure seriously, and you should understand that
+  these notes were <em>not</em> written by me, but were generated. I have walked over
+  them and checked their contents for correctness, but you should also rely on
+  ground-truth sources such as Ed Raff's <em>Inside Deep Learning: Math, Algorithms,
+  Models</em> (recommended book for the course), the <em>Introduction to Statistical
+  Learning</em>, or the <em>free</em> book <em>Foundations of Machine Learning</em>:
+  <a href="https://statsmllib.github.io/books/foundations-of-machine-learning.html">https://statsmllib.github.io/books/foundations-of-machine-learning.html</a>.
+  I recommend these as obviously more serious than these notes &mdash; humans wrote
+  them! So take these lecture notes with a grain of salt: they are merely evocative
+  of the topics we covered, and they are <em>not</em> required for study.</p>
+  <p class="ai-disclosure__sig">&mdash; Kris Micinski, Instructor</p>
+</div>
+
+
+<h1>An ML/LLM Crash Course for Security People</h1>
+
+<p><strong>CIS 400/600 · optional full-math reference · interactive.</strong>
+The gentle version of this material is the Week 2
+<a href="/ai-security-course/slides/03-ml-background/">ML Background &amp; LLM Teaser</a>
+deck and the Week 8
+<a href="/ai-security-course/slides/06b-neural-networks/">Neural Networks</a>
+deck. <em>These</em> notes are the deep dive — never required, always here —
+covering everything in the
+<a href="/ai-security-course/slides/03-ml-llm-crash-course/">crash-course reference deck</a>
+and the
+<a href="/ai-security-course/slides/03-ml-llm-crash-course/">details &amp; extensions deck</a>,
+with full prose, runnable code, and interactive demos. The LLM chapters
+(tokenization onward) are the deep material for the Weeks 10–11 sessions;
+CIS600 students, treat the whole page as fair game. Every widget is
+self-contained — open the console and read the source; none of it is magic,
+which is rather the point.</p>
+
+<div class="co note"><strong>How to use these notes.</strong> The goal of the
+week is the <em>minimum viable model</em> of how LLM systems work that still
+lets you reason about attacks precisely. For each mechanism, ask the two
+security questions: <em>what is the untrusted input here</em>, and <em>where is
+the trust boundary?</em> The recurring answer — control and data share one
+channel — is the throughline of the whole course.</div>
+
+<div class="toc">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#ch1">ML foundations: ERM, gradients, backprop</a></li>
+  <li><a href="#ch2">Tokenization and BPE</a></li>
+  <li><a href="#ch3">Embeddings and attention</a></li>
+  <li><a href="#ch4">The transformer block</a></li>
+  <li><a href="#ch5">Language modeling and training</a></li>
+  <li><a href="#ch6">Alignment: SFT, RLHF, DPO</a></li>
+  <li><a href="#ch7">Decoding and inference</a></li>
+  <li><a href="#ch8">Agents and the security surface</a></li>
+</ol>
+</div>
+
+<h2 id="ch1">1 · ML foundations</h2>
+
+<h3>1.1 The setup, the loss, and empirical risk</h3>
+
+<p>A trained model is a function $f_\theta$ built in two phases —
+<strong>training</strong> (sees the dataset, adjusts $\theta$; the attacker's
+lever is the data: poisoning, backdoors) and <strong>inference</strong>
+($\theta$ frozen, maps $x \mapsto f_\theta(x)$; the attacker's lever is the
+input: adversarial examples, prompt injection). Keep the two windows separate
+in your head; they need entirely different defenses.</p>
+
+<p>Supervised learning: given $S = \{(x_i, y_i)\}_{i=1}^n$ drawn i.i.d. from an
+unknown distribution $\mathcal{D}$, choose $f_\theta$ so it is right on
+<em>future</em> draws, not merely on $S$. A loss scores one prediction; the two
+that matter here are squared error $\tfrac{1}{2}(\hat y - y)^2$ and
+<strong>cross-entropy</strong></p>
+
+$$ L(p, y) = -\sum_{k=1}^{C} y_k \log p_k = -\log p_c \quad (c = \text{true class}), $$
+
+<p>which is the negative log-likelihood of the correct class and blows up as
+$p_c \to 0$. Training is <strong>empirical risk minimization</strong>:</p>
+
+$$ R(\theta) = \frac{1}{n}\sum_{i=1}^{n} L\big(f_\theta(x_i), y_i\big), \qquad \theta^\star = \arg\min_\theta R(\theta). $$
+
+<div class="co threat"><strong>Security reframe.</strong> The dataset is an
+input channel: an attacker who contributes rows to $S$ is programming
+$f_\theta$. And the i.i.d. assumption is exactly what adversaries violate —
+"test looks like train" is a promise no attacker signs.</div>
+
+<h3>1.2 Gradient descent</h3>
+
+<p>The gradient $\nabla_\theta R \in \mathbb{R}^p$ points uphill; step downhill
+with learning rate $\eta$: $\theta \leftarrow \theta - \eta \nabla_\theta R$.
+On $R(\theta) = (\theta-3)^2$ the update is $\theta \leftarrow (1-2\eta)\theta + 6\eta$,
+a geometric sequence with ratio $1-2\eta$: it converges iff $0 < \eta < 1$ and
+diverges outside. Try both regimes:</p>
+
+<div class="widget" id="w-gd">
+  <h4>Gradient-descent playground</h4>
+  <p class="whint">$R(\theta) = (\theta-3)^2$, starting at $\theta_0 = 0$. Drag the learning rate past $\eta = 1$ and watch the iterates oscillate and diverge — that is "the loss went to NaN."</p>
+  <label>learning rate η = <span id="gd-eta-val">0.10</span>
+    <input type="range" id="gd-eta" min="0.02" max="1.20" step="0.02" value="0.10"></label>
+  <button id="gd-step">step</button>
+  <button id="gd-run">run 12 steps</button>
+  <button id="gd-reset">reset</button>
+  <svg id="gd-svg" viewBox="0 0 560 240" role="img" aria-label="Parabola with gradient descent iterates"></svg>
+  <div class="wout" id="gd-out"></div>
+</div>
+
+<p>With $n$ in the billions the full gradient is hopeless per step, so estimate
+it on a random minibatch $B$:
+$\theta \leftarrow \theta - \eta \frac{1}{|B|}\sum_{i\in B}\nabla_\theta L_i$.
+The minibatch gradient is an <em>unbiased</em> estimator of the true gradient.
+(The systems reason you <em>must</em> minibatch — the GPU memory budget,
+~16 bytes/parameter for mixed-precision Adam — is in the
+<a href="/ai-security-course/slides/03-ml-llm-crash-course/">details deck</a>;
+see also the memory calculator in §7.3.)</p>
+
+<h3>1.3 Neurons, layers, nonlinearity</h3>
+
+<p>A neuron is $z = w^\top x + b$, $a = \sigma(z)$; a layer of $m$ neurons is
+one matrix multiply $a = \sigma(Wx+b)$; an MLP chains them,
+$h^{(l+1)} = \sigma(W^{(l)} h^{(l)} + b^{(l)})$, ending in raw
+<strong>logits</strong> that a softmax turns into probabilities. Nonlinearity
+is not optional: two stacked linear layers collapse to one,
+$W_2(W_1 x + b_1) + b_2 = \tilde W x + \tilde b$, so any depth of purely linear
+layers can only draw a hyperplane — and no hyperplane computes XOR. One ReLU
+and a 2-neuron hidden layer solves it. Geometrically, each layer repositions
+space (affine) and then folds it (ReLU); enough folds make tangled classes
+linearly separable.</p>
+
+<h3>1.4 Forward and backward, by hand and in code</h3>
+
+<p>Backprop is the chain rule organized so shared sub-expressions are computed
+once. For a layer $z = Wh+b$, $a = \sigma(z)$, with upstream gradient
+$\delta = \partial L/\partial z$:</p>
+
+$$ \delta = \frac{\partial L}{\partial a} \odot \sigma'(z); \qquad \frac{\partial L}{\partial W} = \delta h^\top, \quad \frac{\partial L}{\partial b} = \delta, \quad \frac{\partial L}{\partial h} = W^\top \delta. $$
+
+<p>And at the very top, softmax + cross-entropy give the famously clean
+$\partial L/\partial z = p - y$. A complete, runnable implementation for the
+lecture's $2 \to 2 \to 2$ network:</p>
+
+<pre><code># forward + backward for the lecture's 2-2-2 net, NumPy only
+import numpy as np
+
+def softmax(z):
+    z = z - z.max()
+    e = np.exp(z)
+    return e / e.sum()
+
+x  = np.array([1.0, 2.0])
+y  = np.array([0.0, 1.0])                      # true class = 2
+W0 = np.array([[1.0, -1.0], [0.0, 1.0]]); b0 = np.zeros(2)
+W1 = np.array([[1.0,  1.0], [0.0, 2.0]]); b1 = np.array([0.0, 1.0])
+
+# ---- forward ----
+z1 = W0 @ x + b0                               # [-1, 2]
+h  = np.maximum(z1, 0.0)                       # ReLU -> [0, 2]
+z2 = W1 @ h + b1                               # [2, 5]
+p  = softmax(z2)                               # [0.047, 0.953]
+L  = -np.log(p @ y)                            # 0.048
+
+# ---- backward ----
+delta2 = p - y                                 # [0.047, -0.047]  (the p - y identity)
+dW1    = np.outer(delta2, h)                   # [[0, .094], [0, -.094]]
+db1    = delta2
+dh     = W1.T @ delta2                         # gradient passed down
+delta1 = dh * (z1 &gt; 0)                         # ReLU gate: [0, 1] mask
+dW0    = np.outer(delta1, x)
+db0    = delta1
+
+# ---- one SGD step ----
+eta = 0.1
+W1 -= eta * dW1;  b1 -= eta * db1
+W0 -= eta * dW0;  b0 -= eta * db0
+</code></pre>
+
+<div class="widget" id="w-mlp">
+  <h4>Forward/backprop calculator (the 2→2→2 net)</h4>
+  <p class="whint">Edit any number and every downstream quantity recomputes — the same worked example as the slides. Watch the ReLU gate zero a column of $\partial L/\partial W^{(1)}$ whenever a hidden unit dies.</p>
+  <div>
+    <label>x = <input type="text" id="mlp-x" value="1, 2" size="8"></label>
+    <label>W⁽⁰⁾ = <input type="text" id="mlp-w0" value="1, -1; 0, 1" size="14"></label>
+    <label>W⁽¹⁾ = <input type="text" id="mlp-w1" value="1, 1; 0, 2" size="14"></label>
+    <label>b⁽¹⁾ = <input type="text" id="mlp-b1" value="0, 1" size="8"></label>
+    <label>true class = <input type="text" id="mlp-y" value="2" size="2"></label>
+  </div>
+  <svg id="mlp-svg" viewBox="0 0 560 240" role="img" aria-label="The 2-2-2 network drawn with current values"></svg>
+  <div class="wout" id="mlp-out"></div>
+  <p class="whint" style="margin-top:0.4em;">Gray node = ReLU killed it (and grays its outgoing wires); dashed = zero weight; orange ring = winning class. Set a weight to 0 or flip a sign and watch the picture reroute.</p>
+</div>
+
+<div class="co threat"><strong>Why attackers care about this section.</strong>
+The forward pass is deterministic and differentiable given the weights. A
+white-box attacker can differentiate through it <em>with respect to the
+input</em> — the same machinery that trains the model crafts adversarial
+examples against it (FGSM, PGD; the adversarial-ML unit). Overfit models also
+memorize training rows verbatim — the raw material of membership-inference and
+training-data-extraction attacks, covered in the securing-AI-systems unit.</div>
+
+<h2 id="ch2">2 · Tokenization</h2>
+
+<h3>2.1 The interface problem and the tradeoff</h3>
+
+<p>A network computes on numbers. The tokenizer — a fixed, deterministic
+program chosen and frozen <em>before</em> training — maps text to integer IDs
+that index rows of the embedding matrix
+$E \in \mathbb{R}^{|V| \times d_{\text{model}}}$. The choice of alphabet trades
+off three quantities: sequence length hurts <em>quadratically</em> (attention
+is $O(n^2 d_{\text{model}})$), vocabulary size hurts <em>linearly</em>
+(embeddings and softmax are $O(|V| \cdot d_{\text{model}})$), and
+out-of-vocabulary behavior determines whether inputs can fail to encode.
+Bytes: tiny $|V|$, longest $n$. Words: shortest $n$, huge $|V|$, heavy OOV.
+Subword (BPE): the engineered middle — fixed $|V|$ of 10k–100k, medium $n$,
+zero OOV.</p>
+
+<h3>2.2 Byte-pair encoding, complete</h3>
+
+<pre><code>from collections import Counter
+
+def pair_counts(corpus):
+    # corpus: {tuple_of_symbols: word_frequency}
+    pairs = Counter()
+    for symbols, freq in corpus.items():
+        for a, b in zip(symbols, symbols[1:]):
+            pairs[(a, b)] += freq
+    return pairs
+
+def apply_merge(corpus, pair):
+    a, b = pair
+    new = {}
+    for symbols, freq in corpus.items():
+        out, i = [], 0
+        while i &lt; len(symbols):
+            if i + 1 &lt; len(symbols) and symbols[i] == a and symbols[i+1] == b:
+                out.append(a + b); i += 2          # fuse the pair
+            else:
+                out.append(symbols[i]); i += 1
+        new[tuple(out)] = freq
+    return new
+
+def learn_bpe(corpus, K):
+    merges = []
+    for _ in range(K):
+        pairs = pair_counts(corpus)
+        if not pairs: break
+        best_count = max(pairs.values())
+        best = min(p for p in pairs if pairs[p] == best_count)  # deterministic tie-break
+        merges.append(best)                        # ORDER matters
+        corpus = apply_merge(corpus, best)
+    return merges, corpus
+
+corpus = {tuple("low_"): 5, tuple("lower_"): 2,
+          tuple("newest_"): 6, tuple("widest_"): 3}
+merges, final = learn_bpe(corpus, 5)
+# merges: [('e','s'), ('es','t'), ('est','_'), ('l','o'), ('lo','w')]
+</code></pre>
+
+<div class="widget" id="w-bpe">
+  <h4>BPE trainer</h4>
+  <p class="whint">The classic corpus (word:count). Click <em>merge</em> to run one round: the widget shows the top pair counts, picks the winner (lexicographic tie-break), and rewrites the corpus. The ordered merge list <em>is</em> the tokenizer.</p>
+  <label>corpus <input type="text" id="bpe-corpus" value="low:5, lower:2, newest:6, widest:3" size="42"></label>
+  <button id="bpe-merge">merge</button>
+  <button id="bpe-reset">reset</button>
+  <div class="wout" id="bpe-out"></div>
+</div>
+
+<p>GPT-2 runs BPE over raw <em>bytes</em>: base alphabet 256, so every input
+encodes — $|V| = 256 + 50{,}000 \text{ merges} + 1$
+(<code>&lt;|endoftext|&gt;</code>) $= 50{,}257$. A regex pre-tokenizer keeps
+merges from crossing word boundaries, which is why <code>"the"</code> and
+<code>" the"</code> (leading space) are <em>different token IDs</em>.</p>
+
+<h3>2.3 The tokenizer is a parser — and parsers disagree</h3>
+
+<div class="co threat"><strong>Tokenization differentials.</strong> A guardrail
+that scans the raw string and a model that reads tokens are two parsers over
+the same bytes. Whitespace boundaries, Unicode confusables and normalization
+(NFC vs NFKC), and word-splitting all make them disagree — the same shape as
+HTTP request smuggling, where a front-end and back-end disagree on where a
+request ends. <strong>Special-token injection</strong> is the sharper version:
+if user bytes can encode to control tokens like <code>&lt;|im_end|&gt;</code>,
+the attacker forges the markers that delimit trust.</div>
+
+<div class="co defense"><strong>Mirror.</strong> Canonicalize once, then check:
+filter on tokens produced by <em>the model's own tokenizer</em>, apply the same
+normalization the model's pipeline uses, and add role delimiters as reserved
+IDs inserted out-of-band — the tokenizer's version of a parameterized query.
+Never build chat structure by string concatenation.</div>
+
+<p class="srcline">Glitch tokens (SolidGoldMagikarp and friends) — vocabulary
+rows the model never trained — are covered in the details deck.</p>
+
+<h2 id="ch3">3 · Embeddings and attention</h2>
+
+<h3>3.1 From IDs to vectors, and the soft dictionary</h3>
+
+<p>Token ID $x_t$ selects row $x_t$ of the learned table $E$; stacking rows
+gives the model's input $X \in \mathbb{R}^{n \times d_{\text{model}}}$. The
+geometry is emergent — "cat" and "dog" are near each other because that
+lowered the loss. Attention is then a <strong>content-addressed
+retrieval</strong>: a dict where matching is by similarity, not equality, and
+every entry contributes. Queries, keys, values are learned projections
+$Q = XW_Q$, $K = XW_K$, $V = XW_V$, and the score
+$q \cdot k = \lVert q\rVert \lVert k\rVert \cos\theta$ is pure geometry — the
+learning lives in the projections that shape the space.</p>
+
+$$ \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V $$
+
+<p>Compare ($QK^\top$, all pairs), scale ($1/\sqrt{d_k}$), normalize (row-wise
+softmax → row-stochastic $A$), read out ($AV$: each output row is a convex
+combination of value rows). The $\sqrt{d_k}$ is a variance argument: for unit-
+variance entries, $\mathrm{Var}(q\cdot k) = d_k$, so dividing by
+$\sqrt{d_k}$ restores unit variance and keeps softmax out of its saturated,
+zero-gradient regime. And softmax weights are <em>never exactly zero</em>
+(except under a $-\infty$ mask): every position always reads every other
+position a little.</p>
+
+<div class="widget" id="w-attn">
+  <h4>Attention playground</h4>
+  <p class="whint">The lecture's worked example: 3 keys/values, $d_k = 2$. Drag the query components and watch the scores, the softmax weights, and the output — always inside the convex hull of the three value vectors (right). Toggle the mask to cut off position 3.</p>
+  <label>q₁ = <span id="attn-q1v">1.0</span> <input type="range" id="attn-q1" min="-2" max="2" step="0.1" value="1"></label>
+  <label>q₂ = <span id="attn-q2v">1.0</span> <input type="range" id="attn-q2" min="-2" max="2" step="0.1" value="1"></label>
+  <label><input type="checkbox" id="attn-mask"> mask position 3 (−∞)</label>
+  <div style="display:flex; flex-wrap:wrap; gap:1em; align-items:flex-start;">
+    <div style="flex:1; min-width:260px;" id="attn-bars"></div>
+    <svg id="attn-svg" viewBox="0 0 220 220" style="width:220px;" role="img" aria-label="Value vectors and attention output in 2D"></svg>
+  </div>
+  <div class="wout" id="attn-out"></div>
+</div>
+
+<h3>3.2 Causal masking, code, and the security reading</h3>
+
+<p>Autoregressive training scores all positions in parallel, so position $i$
+must not see $j &gt; i$: set those scores to $-\infty$ before softmax and the
+weights become exactly zero. The mask is a <em>time</em> constraint, not a
+trust constraint — untrusted tokens sit in the lower triangle with everything
+else. Reference implementation (run it on the widget's numbers):</p>
+
+<pre><code>import numpy as np
+
+def softmax(z, axis=-1):
+    z = z - z.max(axis=axis, keepdims=True)
+    e = np.exp(z)                                  # exp(-inf) -> 0, no NaN
+    return e / e.sum(axis=axis, keepdims=True)
+
+def attention(Q, K, V, causal=False):
+    d_k = Q.shape[-1]
+    S = Q @ K.T / np.sqrt(d_k)
+    if causal:
+        n = S.shape[0]
+        S = np.where(np.triu(np.ones((n, n), dtype=bool), k=1), -np.inf, S)
+    A = softmax(S, axis=-1)
+    return A @ V, A
+
+Q = np.array([[1.,0.],[1.,1.],[0.,1.]])
+K = np.array([[1.,0.],[0.,1.],[1.,1.]])
+V = np.array([[2.,0.],[0.,2.],[1.,1.]])
+out, A = attention(Q, K, V)     # out[1] == [1.00, 1.00]
+</code></pre>
+
+<div class="co threat"><strong>Content-addressed, not channel-addressed.</strong>
+Every token — system prompt, user turn, retrieved page — becomes a row of $X$
+with no type tag; attention routes by similarity, never by origin; the output
+blends <em>all</em> values with strictly positive weight. There is no
+architectural boundary between instruction tokens and data tokens. The
+mechanism you just computed by hand <em>is</em> the prompt-injection
+vulnerability.</div>
+
+<h2 id="ch4">4 · The transformer block</h2>
+
+<h3>4.1 The four ingredients</h3>
+
+<ul>
+  <li><strong>Multi-head attention.</strong> One head = one softmax = one
+  relationship per position. Run $h$ heads at width $d_k = d_{\text{model}}/h$
+  (total compute roughly constant), concatenate, and mix with $W_O$:
+  $\mathrm{MultiHead}(X) = \mathrm{Concat}(\mathrm{head}_1,\dots,\mathrm{head}_h)W_O$.</li>
+  <li><strong>Position (RoPE).</strong> Attention alone is permutation-
+  equivariant — order-blind. RoPE rotates $q$ at position $m$ by $R(m\theta)$
+  and $k$ at position $n$ by $R(n\theta)$; since
+  $R(m\theta)^\top R(n\theta) = R((n-m)\theta)$, the score depends only on the
+  relative offset $n-m$. Relative position, built into the dot product, no
+  learned table.</li>
+  <li><strong>Residual stream + LayerNorm.</strong> Every sublayer is
+  $y = x + F(x)$, so the Jacobian has an identity term and gradients cross a
+  hundred layers undiminished. LayerNorm standardizes each token over its own
+  features, then rescales with learned $\gamma, \beta$. Read the model as one
+  additive bus of width $d_{\text{model}}$ that every component reads and
+  writes — with no protected subspace.</li>
+  <li><strong>Feed-forward network.</strong>
+  $\mathrm{FFN}(x) = W_2\,\phi(W_1 x + b_1) + b_2$ with $d_{ff} = 4d_{\text{model}}$,
+  applied per token. It is the block's only per-token nonlinearity and holds
+  two-thirds of its parameters — interpretability work reads it as key-value
+  memory where much factual knowledge lives.</li>
+</ul>
+
+<div class="widget" id="w-ln">
+  <h4>LayerNorm calculator</h4>
+  <p class="whint">Type any vector; it re-standardizes to mean 0, variance 1 (before $\gamma,\beta$).</p>
+  <label>x = <input type="text" id="ln-in" value="2, -1, 0, 3" size="18"></label>
+  <div class="wout" id="ln-out"></div>
+</div>
+
+<h3>4.2 The parameter budget</h3>
+
+<p>Per block with $d_{ff} = 4d$: attention $= W_Q,W_K,W_V,W_O = 4d^2$;
+FFN $= W_1 + W_2 = 8d^2$; total $\approx 12\,d_{\text{model}}^2$ per block, so
+$N \approx 12 L d_{\text{model}}^2 + |V| d_{\text{model}}$. Sanity-check GPT-2
+small: $12 \cdot 12 \cdot 768^2 \approx 85$M plus $50{,}257 \cdot 768 \approx
+38.6$M — about 124M. The FFN, not attention, holds the weights.</p>
+
+<div class="co threat"><strong>What the architecture hands the attacker.</strong>
+Differentiable end to end (gradients craft adversarial inputs — GCG); one
+residual stream with no protected subspace (no instruction/data boundary); a
+uniform stack (system text has no privileged channel — priority is learned,
+not enforced); any-to-any attention (a token buried in retrieved data can
+steer any output); behavior distributed across weights (no line to patch).
+Classical boundaries are <em>enforced by mechanisms</em>; the transformer has
+none inside it.</div>
+
+<h2 id="ch5">5 · Language modeling and training</h2>
+
+<h3>5.1 The objective</h3>
+
+<p>The chain rule factors any sequence distribution exactly:
+$p_\theta(x) = \prod_t p_\theta(x_t \mid x_{&lt;t})$. The model's one job is
+the conditional next-token distribution, and training is maximum likelihood —
+equivalently cross-entropy, equivalently per-token negative log-likelihood:</p>
+
+$$ \mathcal{L}(\theta) = -\frac{1}{n}\sum_{t=1}^{n} \log p_\theta\big(x_t \mid x_{&lt;t}\big). $$
+
+<p>No separate label set: the corpus is its own supervision ("self-supervised"),
+which is why the data budget is the readable internet. Three training facts
+that matter later:</p>
+
+<ul>
+  <li><strong>Teacher forcing / exposure bias.</strong> Training always
+  conditions on the ground-truth prefix; inference conditions on the model's
+  own output. Guarantees thin out off-distribution — which is exactly where
+  jailbreaks operate (unusual encodings, role-play frames, long distracting
+  prefixes). Same lesson as fuzzing.</li>
+  <li><strong>One pass, $n-1$ targets.</strong> The causal mask lets a single
+  forward pass produce every conditional at once; targets are the inputs
+  shifted left by one. (Get the shift wrong and the model learns to copy its
+  input — loss collapses to ~0, a classic "too good to be true.")</li>
+  <li><strong>Perplexity.</strong> $\mathrm{PPL} = e^{\mathcal{L}}$, the
+  geometric-mean $1/p$ — an effective branching factor. Uniform over $|V|$
+  gives $\mathrm{PPL} = |V|$; perfect prediction gives 1; perplexity 20 reads
+  "as unsure as a fair 20-sided die at each step."</li>
+</ul>
+
+<h3>5.2 The corpus is a supply chain</h3>
+
+<div class="co threat">Pretraining corpora are trillions of tokens of filtered
+public internet. The curation pipeline (sourcing → filtering → deduplication)
+is the trust boundary: an adversary who plants content that survives filtering
+has written into the training set. Deduplication is simultaneously a quality
+intervention and a privacy control — verbatim memorization concentrates on
+duplicated strings (Lee et al., ACL 2022), and memorized strings are what
+training-data-extraction attacks recover.</div>
+
+<h3>5.3 Scaling and the "emergence" debate</h3>
+
+<p>Chinchilla's compute-optimal recipe (grow parameters and data in lockstep,
+~20 tokens/parameter) is in the
+<a href="/ai-security-course/slides/03-ml-llm-crash-course/">details deck</a>.
+The debate to internalize is <em>emergence</em>: Wei et al. report abilities
+that appear suddenly at scale; Schaeffer et al. reply that an all-or-nothing
+metric can manufacture a cliff out of smooth progress. If per-token accuracy
+$a$ improves smoothly, exact-match on a $k$-token answer is $\approx a^k$ —
+try it:</p>
+
+<div class="widget" id="w-emerge">
+  <h4>The emergence mirage</h4>
+  <p class="whint">The cyan curve is a smooth logistic per-token accuracy $a(s)$. The orange curve is $a(s)^k$ — the probability all $k$ tokens are right. Drag $k$ and watch a smooth curve become a "phase transition." The metric is the denominator.</p>
+  <label>answer length k = <span id="em-k-val">10</span>
+    <input type="range" id="em-k" min="1" max="80" step="1" value="10"></label>
+  <svg id="em-svg" viewBox="0 0 560 240" role="img" aria-label="Smooth accuracy vs exact-match cliff"></svg>
+</div>
+
+<h2 id="ch6">6 · Alignment: SFT, RLHF, DPO</h2>
+
+<h3>6.1 The pipeline</h3>
+
+<p>Pretraining never says <em>be helpful</em>; a base model just continues
+text. Alignment is post-training, and every stage is the same weights, more
+fine-tuning:</p>
+
+<pre><code>                     demonstrations              preference pairs
+                   (instruction,response)     (x, y_win, y_lose)
+                          |                          |
+pretrained ──SFT──▶  SFT model  ──reward model──▶  r_phi  ──PPO──▶ aligned policy
+pi_base   (X-ent)    pi_ref     (Bradley-Terry)          (KL leash)   pi_theta
+                          |                                              ^
+                          └────────── DPO (skip r_phi + RL) ─────────────┘
+</code></pre>
+
+<ul>
+  <li><strong>SFT</strong>: cross-entropy on (instruction, ideal response)
+  pairs, prompt tokens masked from the loss. Behavioral cloning — it never
+  sees a <em>bad</em> answer to push away from.</li>
+  <li><strong>Reward model + Bradley–Terry</strong>: a scalar head $r_\phi(x,y)$;
+  preference probability is a logistic on the reward <em>difference</em>,
+  $P(y_w \succ y_l) = \sigma\!\big(r_\phi(x,y_w) - r_\phi(x,y_l)\big)$ —
+  identifiable only up to an additive constant.</li>
+  <li><strong>PPO with a KL leash</strong>:
+  $\max_\theta \mathbb{E}[r_\phi(x,y)] - \beta\,\mathrm{KL}(\pi_\theta \| \pi_{\text{ref}})$.
+  The leash exists because $r_\phi$ is a learned <em>proxy</em>: optimize it
+  too hard and Goodhart bites — gold-standard quality rises, peaks, then falls
+  as KL grows (Gao et al.; curve in the details deck).</li>
+  <li><strong>DPO</strong>: substitute the implicit reward
+  $\beta\log\frac{\pi_\theta}{\pi_{\text{ref}}}$ into Bradley–Terry; the
+  partition function cancels, leaving one supervised-style classification loss
+  — no reward network, no RL, offline.</li>
+</ul>
+
+<h3>6.2 What alignment is, mechanically</h3>
+
+<div class="co threat">Every method produces the same kind of object: a
+<strong>learned soft preference</strong> over outputs, stored as a bias in the
+sampling distribution. $\pi_\theta(y_{\text{bad}} \mid x)$ becomes small but
+stays <em>positive</em> — so sampling reaches it (enough retries find the
+low-probability compliance), and the prompt moves the mass ($x$ is
+attacker-controlled; shifting the conditional back up <em>is</em> a jailbreak).
+Held against the reference monitor's three properties — always invoked,
+tamper-proof, verifiable — alignment satisfies <strong>none</strong>. It is a
+tendency, not a gate; jailbreaks are the expected consequence, not a bug
+awaiting a patch.</div>
+
+<h2 id="ch7">7 · Decoding and inference</h2>
+
+<h3>7.1 From logits to a token</h3>
+
+<p>Greedy ($\arg\max$) is deterministic but degenerates into repetition;
+likelihood-maximizing text is not human-like text (Holtzman et al.). So we
+sample, with knobs: <strong>temperature</strong> rescales logits
+($p = \mathrm{softmax}(z/T)$; $T \to 0$ is greedy, $T \to \infty$ is uniform,
+ranking never changes) and <strong>top-p</strong> truncates to the smallest
+set of tokens whose cumulative mass reaches $p$ — the nucleus adapts to the
+distribution's shape, which a fixed top-$k$ cannot.</p>
+
+<div class="widget" id="w-sample">
+  <h4>Temperature & top-p sampler</h4>
+  <p class="whint">A realistic next-token distribution after <em>"The capital of France is"</em>. Grey bars are cut by the nucleus. Sample and watch the variability — then imagine each draw is a guardrail decision.</p>
+  <label>T = <span id="sm-T-val">1.0</span> <input type="range" id="sm-T" min="0.1" max="3" step="0.1" value="1"></label>
+  <label>top-p = <span id="sm-p-val">0.90</span> <input type="range" id="sm-p" min="0.1" max="1" step="0.05" value="0.9"></label>
+  <button id="sm-draw">sample 20 tokens</button>
+  <div id="sm-bars" style="margin-top:0.6em;"></div>
+  <div class="wout" id="sm-out"></div>
+</div>
+
+<div class="co threat"><strong>The evaluation trap.</strong> With any $T &gt; 0$
+the output is a random variable: $P[\text{attack fires}] = \pi \in (0,1)$, and
+one trial is a Bernoulli sample, not the truth. An attack that fails once may
+succeed on retry. Report rates with denominators — the course's standing
+demand — and pin seeds + decoding config for reproducibility (necessary, not
+sufficient: even greedy is not bitwise-stable across GPUs and batch sizes).</div>
+
+<h3>7.2 The KV cache</h3>
+
+<p>Generating token $t{+}1$ needs every earlier position's $K,V$; caching them
+turns an $O(n^2)$ decode into $O(n)$ per step, at a memory price of
+$2 \cdot L \cdot n \cdot d_{\text{model}} \cdot b$ bytes per sequence. For
+Llama-2-7B in fp16 that is 0.5 MiB per token — 2 GiB per full 4096-token
+sequence, so 8 concurrent sequences carry more cache than the 13 GiB of
+weights. KV memory, not compute, caps serving throughput; GQA/MQA (shared KV
+heads) is the standard mitigation.</p>
+
+<div class="widget" id="w-kv">
+  <h4>KV-cache & training-memory calculator</h4>
+  <p class="whint">Left: inference KV-cache for your shape. Right: the training-memory bill at ~16 bytes/parameter (fp16 weights + grads, fp32 Adam state) from the details deck.</p>
+  <div>
+    <label>layers L <input type="text" id="kv-L" value="32" size="4"></label>
+    <label>d_model <input type="text" id="kv-d" value="4096" size="6"></label>
+    <label>context n <input type="text" id="kv-n" value="4096" size="6"></label>
+    <label>batch <input type="text" id="kv-b" value="8" size="4"></label>
+    <label>params (B) <input type="text" id="kv-p" value="7" size="4"></label>
+  </div>
+  <div class="wout" id="kv-out"></div>
+</div>
+
+<div class="co threat"><strong>Bigger window = bigger injection surface.</strong>
+Inside the context there is no provenance: retrieved docs, tool outputs, and
+pasted files are the same undifferentiated tokens as the system prompt.
+Many-shot jailbreaking (Anil et al., 2024) consumes context capacity directly
+— success follows a power law in the number of stuffed demonstrations. The
+capacity serving systems brag about is the attack's fuel.</div>
+
+<h2 id="ch8">8 · Agents and the security surface</h2>
+
+<h3>8.1 The loop</h3>
+
+<pre><code>def agent(goal, tools, model, max_steps):
+    ctx = [SYSTEM, goal]                    # the context = ONE token stream
+    for t in range(max_steps):
+        out = model.generate(ctx)           # THINK: sample from p_theta(. | ctx)
+        act = parse_action(out)             # structured action, or a final answer
+        if act.type == "final":
+            return act.answer
+        obs = tools[act.name](**act.args)   # ACT: harness runs it with APP authority
+        ctx = ctx + [out, format_obs(obs)]  # OBSERVE: result re-enters the SAME ctx
+    return "step budget exhausted"
+</code></pre>
+
+<p>Every agent product is a variant of these ten lines. Two load-bearing facts:
+the model holds no credentials — the <em>harness</em> does, so the security
+question is what the harness can do and who influences the text that drives it;
+and each tool observation re-enters the very context that decides the next
+action, with no change of type. Formally, $c_t$ concatenates trusted spans
+(system prompt, goal) with spans authored by tools and the world, and
+$\pi_\theta(a_t \mid c_t)$ conditions on all of it identically.</p>
+
+<h3>8.2 Tools, RAG, and the trust inversion</h3>
+
+<p>A tool schema (JSON Schema) is a contract on <em>syntax</em>; whether the
+call should be made is decided by the model, driven by $c_t$. The harness's
+<code>validate</code>/<code>REGISTRY</code> lines are the defensive foothold —
+ordinary, testable code where allowlists, rate limits, and approval gates
+attach. RAG retrieves by embedding cosine similarity
+($\mathrm{score}(q,d) = \cos(E_q(q), E_d(d))$) and splices the winner into
+$c_t$ verbatim: similarity is not trust, and an attacker who writes a document
+your retrieval will rank has written into your agent's control channel without
+touching your servers — <strong>indirect prompt injection</strong>, the
+dominant agent threat.</p>
+
+<div class="co note"><strong>The collapse, restated.</strong> A parameterized
+SQL query works because SQL has a formal grammar: "code or value?" is
+decidable, and a mechanism enforces it. Natural language has no such grammar,
+so there is no parameterized prompt — the instruction "treat this as data" is
+written in the very channel it polices. Buffer overflow → SQL injection →
+prompt injection: same bug, new layer, except this time the mixing is the
+product feature.</div>
+
+<div class="co defense"><strong>The defensive mirror.</strong> Tokenizer →
+one canonicalizer, filter sees what the model sees. Context/RAG → least
+privilege, trust-level isolation, provenance. Sampler → bound the probability
+under $N$ retries; gate, don't "usually refuse." Tools → validate arguments,
+minimal scope, human approval. Every defense lives <em>outside</em> the model,
+where mechanisms exist: constrain what the agent can reach, not what it can
+say.</div>
+
+<hr>
+<p class="srcline">Sources are cited on the corresponding slides in the
+<a href="/ai-security-course/slides/03-ml-llm-crash-course/">main deck</a>
+and <a href="/ai-security-course/slides/03-ml-llm-crash-course/">details deck</a>
+(Goodfellow–Bengio–Courville; Vaswani et al. 2017; Radford et al. 2019;
+Hoffmann et al. 2022; Holtzman et al. 2020; Ouyang et al. 2022; Rafailov et
+al. 2023; Gao et al. 2022; Lewis et al. 2020; Anil et al. 2024; among others).
+These notes are a first draft and will be revised.</p>
+
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  /* ---------- KaTeX ---------- */
+  function tryRender() {
+    if (window.renderMathInElement) {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false }
+        ],
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      });
+    } else { setTimeout(tryRender, 200); }
+  }
+  tryRender();
+
+  var $ = function (id) { return document.getElementById(id); };
+  function softmax(a) {
+    var m = Math.max.apply(null, a);
+    var e = a.map(function (x) { return Math.exp(x - m); });
+    var s = e.reduce(function (p, c) { return p + c; }, 0);
+    return e.map(function (x) { return x / s; });
+  }
+  function fmt(x, d) { return (Math.abs(x) < 1e12 ? x.toFixed(d === undefined ? 3 : d) : x.toExponential(2)); }
+
+  /* ---------- 1. Gradient-descent playground ---------- */
+  (function () {
+    var theta = 0, hist = [0];
+    var svg = $("gd-svg");
+    function R(t) { return (t - 3) * (t - 3); }
+    // view: theta in [-3, 9], R in [0, 36]
+    function px(t) { return 40 + (t + 3) / 12 * 500; }
+    function py(r) { return 210 - Math.min(r, 36) / 36 * 180; }
+    function draw() {
+      var s = '<line x1="40" y1="210" x2="540" y2="210" stroke="#999"/>' +
+              '<line x1="40" y1="20" x2="40" y2="210" stroke="#999"/>';
+      var pts = [];
+      for (var t = -3; t <= 9.001; t += 0.15) pts.push(px(t) + "," + py(R(t)));
+      s += '<polyline fill="none" stroke="#000E54" stroke-width="2" points="' + pts.join(" ") + '"/>';
+      s += '<circle cx="' + px(3) + '" cy="' + py(0) + '" r="4" fill="#1e824c"/>';
+      for (var i = 0; i < hist.length; i++) {
+        var op = 0.25 + 0.75 * i / Math.max(1, hist.length - 1);
+        s += '<circle cx="' + px(Math.max(-3, Math.min(9, hist[i]))) + '" cy="' + py(R(hist[i])) + '" r="5" fill="#F76900" opacity="' + op + '"/>';
+        if (i > 0) {
+          s += '<line x1="' + px(Math.max(-3, Math.min(9, hist[i - 1]))) + '" y1="' + py(R(hist[i - 1])) +
+               '" x2="' + px(Math.max(-3, Math.min(9, hist[i]))) + '" y2="' + py(R(hist[i]))
+               + '" stroke="#F76900" stroke-width="1" opacity="0.5"/>';
+        }
+      }
+      svg.innerHTML = s;
+      $("gd-out").textContent = "theta: " + hist.map(function (t) { return fmt(t, 2); }).join(" -> ") +
+        (Math.abs(theta) > 50 ? "   (DIVERGED)" : "");
+    }
+    function step() {
+      var eta = parseFloat($("gd-eta").value);
+      theta = theta - eta * 2 * (theta - 3);
+      hist.push(theta); if (hist.length > 14) hist.shift();
+      draw();
+    }
+    $("gd-eta").addEventListener("input", function () { $("gd-eta-val").textContent = fmt(parseFloat(this.value), 2); });
+    $("gd-step").addEventListener("click", step);
+    $("gd-run").addEventListener("click", function () { for (var i = 0; i < 12; i++) step(); });
+    $("gd-reset").addEventListener("click", function () { theta = 0; hist = [0]; draw(); });
+    draw();
+  })();
+
+  /* ---------- 2. MLP forward/backprop calculator ---------- */
+  (function () {
+    function vec(s) { return s.split(",").map(parseFloat); }
+    function mat(s) { return s.split(";").map(vec); }
+    function mv(W, x) { return W.map(function (r) { return r[0] * x[0] + r[1] * x[1]; }); }
+    var NX = [60, 60], NHX = [280, 280], NOX = [500, 500], NY = [70, 180];
+    function drawNet(x, W0, W1, b1, z1, h, z2, p) {
+      var win = p[1] > p[0] ? 1 : 0;
+      function edge(x1, y1, x2, y2, w, dead) {
+        var col = (w === 0) ? "#9aa3b8" : (dead ? "#b5b5b5" : "#000E54");
+        var dash = (w === 0) ? ' stroke-dasharray="5,4"' : "";
+        var lx = x1 + 0.3 * (x2 - x1), ly = y1 + 0.3 * (y2 - y1) + (y1 === y2 ? -7 : -5);
+        return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + col + '" stroke-width="2"' + dash + '/>' +
+               '<text x="' + lx + '" y="' + ly + '" font-size="11" text-anchor="middle" fill="' + col + '">' + fmt(w, 2).replace(/\.00$/, "") + '</text>';
+      }
+      var sv = '<text x="60" y="22" font-size="12" text-anchor="middle" fill="#7f8aa3">input</text>' +
+               '<text x="280" y="22" font-size="12" text-anchor="middle" fill="#7f8aa3">hidden (ReLU)</text>' +
+               '<text x="500" y="22" font-size="12" text-anchor="middle" fill="#7f8aa3">output (softmax)</text>';
+      var i, j;
+      for (i = 0; i < 2; i++) for (j = 0; j < 2; j++) sv += edge(NX[j], NY[j], NHX[i], NY[i], W0[i][j], false);
+      for (i = 0; i < 2; i++) for (j = 0; j < 2; j++) sv += edge(NHX[j], NY[j], NOX[i], NY[i], W1[i][j], h[j] === 0);
+      for (j = 0; j < 2; j++) {
+        sv += '<circle cx="60" cy="' + NY[j] + '" r="28" fill="#fff" stroke="#000E54" stroke-width="2"/>' +
+              '<text x="60" y="' + (NY[j] + 4) + '" font-size="12" text-anchor="middle" fill="#000E54">x = ' + fmt(x[j], 1) + '</text>';
+        var deadH = h[j] === 0;
+        sv += '<circle cx="280" cy="' + NY[j] + '" r="28" fill="' + (deadH ? "#f0f0f0" : "#fff") + '" stroke="' + (deadH ? "#999" : "#000E54") + '" stroke-width="2"/>' +
+              '<text x="280" y="' + (NY[j] - 2) + '" font-size="11" text-anchor="middle" fill="' + (deadH ? "#666" : "#000E54") + '">z = ' + fmt(z1[j], 2) + '</text>' +
+              '<text x="280" y="' + (NY[j] + 12) + '" font-size="11" text-anchor="middle" fill="' + (deadH ? "#666" : "#000E54") + '">h = ' + fmt(h[j], 2) + '</text>';
+        sv += '<circle cx="500" cy="' + NY[j] + '" r="28" fill="#fff" stroke="' + (j === win ? "#F76900" : "#000E54") + '" stroke-width="' + (j === win ? 3.5 : 2) + '"/>' +
+              '<text x="500" y="' + (NY[j] - 2) + '" font-size="11" text-anchor="middle" fill="#000E54">z = ' + fmt(z2[j], 2) + '</text>' +
+              '<text x="500" y="' + (NY[j] + 12) + '" font-size="11" text-anchor="middle" fill="#000E54">p = ' + fmt(p[j], 3) + '</text>' +
+              '<text x="500" y="' + (NY[j] - 36) + '" font-size="10" text-anchor="middle" fill="#7f8aa3">+ b = ' + fmt(b1[j], 1) + '</text>';
+      }
+      $("mlp-svg").innerHTML = sv;
+    }
+    function recompute() {
+      try {
+        var x = vec($("mlp-x").value), W0 = mat($("mlp-w0").value), W1 = mat($("mlp-w1").value), b1 = vec($("mlp-b1").value);
+        var cls = parseInt($("mlp-y").value, 10); var y = cls === 1 ? [1, 0] : [0, 1];
+        var z1 = mv(W0, x);
+        var h = z1.map(function (v) { return Math.max(0, v); });
+        var z2 = mv(W1, h).map(function (v, i) { return v + b1[i]; });
+        var p = softmax(z2);
+        var L = -Math.log(p[cls - 1]);
+        var d2 = [p[0] - y[0], p[1] - y[1]];
+        var dW1 = [[d2[0] * h[0], d2[0] * h[1]], [d2[1] * h[0], d2[1] * h[1]]];
+        var dh = [W1[0][0] * d2[0] + W1[1][0] * d2[1], W1[0][1] * d2[0] + W1[1][1] * d2[1]];
+        var d1 = [z1[0] > 0 ? dh[0] : 0, z1[1] > 0 ? dh[1] : 0];
+        drawNet(x, W0, W1, b1, z1, h, z2, p);
+        var f3 = function (v) { return "[" + v.map(function (u) { return fmt(u); }).join(", ") + "]"; };
+        $("mlp-out").textContent =
+          "forward:   z1 = " + f3(z1) + "   h = ReLU(z1) = " + f3(h) + "\n" +
+          "           z2 = " + f3(z2) + "   p = softmax(z2) = " + f3(p) + "   L = " + fmt(L) + "\n" +
+          "backward:  delta2 = p - y = " + f3(d2) + "\n" +
+          "           dL/dW1 = [" + f3(dW1[0]) + ", " + f3(dW1[1]) + "]   (outer product delta2 h^T)\n" +
+          "           dL/dh  = " + f3(dh) + "   -> through ReLU gate: delta1 = " + f3(d1);
+      } catch (e) { $("mlp-out").textContent = "parse error — use comma vectors and semicolon-separated matrix rows"; }
+    }
+    ["mlp-x", "mlp-w0", "mlp-w1", "mlp-b1", "mlp-y"].forEach(function (id) { $(id).addEventListener("input", recompute); });
+    recompute();
+  })();
+
+  /* ---------- 3. BPE trainer ---------- */
+  (function () {
+    var corpus = {}, merges = [];
+    function parseCorpus() {
+      corpus = {}; merges = [];
+      $("bpe-corpus").value.split(",").forEach(function (part) {
+        var kv = part.split(":");
+        if (kv.length === 2) {
+          var w = kv[0].trim(), c = parseInt(kv[1], 10);
+          if (w && c > 0) corpus[JSON.stringify(w.split("").concat(["_"]))] = c;
+        }
+      });
+      render("(reset — click merge)");
+    }
+    function pairCounts() {
+      var pc = {};
+      Object.keys(corpus).forEach(function (k) {
+        var sym = JSON.parse(k), f = corpus[k];
+        for (var i = 0; i + 1 < sym.length; i++) {
+          var key = JSON.stringify([sym[i], sym[i + 1]]);
+          pc[key] = (pc[key] || 0) + f;
+        }
+      });
+      return pc;
+    }
+    function doMerge() {
+      var pc = pairCounts(), keys = Object.keys(pc);
+      if (!keys.length) return;
+      var best = null, bestC = -1;
+      keys.sort();
+      keys.forEach(function (k) { if (pc[k] > bestC) { bestC = pc[k]; best = k; } });
+      var pair = JSON.parse(best);
+      merges.push(pair[0] + "+" + pair[1] + " (" + bestC + ")");
+      var next = {};
+      Object.keys(corpus).forEach(function (k) {
+        var sym = JSON.parse(k), out = [], i = 0;
+        while (i < sym.length) {
+          if (i + 1 < sym.length && sym[i] === pair[0] && sym[i + 1] === pair[1]) { out.push(sym[i] + sym[i + 1]); i += 2; }
+          else { out.push(sym[i]); i += 1; }
+        }
+        next[JSON.stringify(out)] = (next[JSON.stringify(out)] || 0) + corpus[k];
+      });
+      corpus = next;
+      render("merged " + pair[0] + " + " + pair[1] + "  (count " + bestC + ", lexicographic tie-break)");
+    }
+    function render(msg) {
+      var pc = pairCounts();
+      var top = Object.keys(pc).map(function (k) { return [JSON.parse(k), pc[k]]; })
+        .sort(function (a, b) { return b[1] - a[1] || (JSON.stringify(a[0]) < JSON.stringify(b[0]) ? -1 : 1); })
+        .slice(0, 5)
+        .map(function (e) { return "(" + e[0][0] + "," + e[0][1] + "):" + e[1]; }).join("   ");
+      var words = Object.keys(corpus).map(function (k) {
+        return "  " + String(corpus[k]).padStart(2) + " x  [" + JSON.parse(k).join(" ") + "]";
+      }).join("\n");
+      $("bpe-out").textContent = msg + "\n\nmerge list: " + (merges.length ? merges.join(", ") : "(empty)") +
+        "\ntop pairs:  " + (top || "(none)") + "\n\ncorpus now:\n" + words;
+    }
+    $("bpe-merge").addEventListener("click", doMerge);
+    $("bpe-reset").addEventListener("click", parseCorpus);
+    $("bpe-corpus").addEventListener("change", parseCorpus);
+    parseCorpus();
+  })();
+
+  /* ---------- 4. Attention playground ---------- */
+  (function () {
+    var K = [[1, 0], [0, 1], [1, 1]], V = [[2, 0], [0, 2], [1, 1]];
+    function recompute() {
+      var q = [parseFloat($("attn-q1").value), parseFloat($("attn-q2").value)];
+      $("attn-q1v").textContent = fmt(q[0], 1); $("attn-q2v").textContent = fmt(q[1], 1);
+      var masked = $("attn-mask").checked;
+      var s = K.map(function (k) { return (q[0] * k[0] + q[1] * k[1]) / Math.SQRT2; });
+      if (masked) s[2] = -Infinity;
+      var w = softmax(s);
+      var out = [0, 0];
+      for (var i = 0; i < 3; i++) { out[0] += w[i] * V[i][0]; out[1] += w[i] * V[i][1]; }
+      var bars = "";
+      for (i = 0; i < 3; i++) {
+        bars += '<div class="bar-row"><span class="blab">pos ' + (i + 1) + '</span>' +
+          '<span class="btrack"><span class="bfill" style="width:' + (w[i] * 100) + '%"></span></span>' +
+          '<span class="bval">' + fmt(w[i]) + '</span></div>';
+      }
+      $("attn-bars").innerHTML = bars;
+      var sTxt = s.map(function (x) { return x === -Infinity ? "-inf" : fmt(x, 2); }).join(", ");
+      $("attn-out").textContent = "scaled scores s = [" + sTxt + "]   weights = softmax(s)\noutput = A2,: V = [" + fmt(out[0], 2) + ", " + fmt(out[1], 2) + "]  (convex combination of value rows)";
+      // 2D plot: values + output. view [-0.4, 2.4]^2
+      function px(x) { return 20 + (x + 0.4) / 2.8 * 180; }
+      function py(y) { return 200 - (y + 0.4) / 2.8 * 180; }
+      var sv = '<rect x="0" y="0" width="220" height="220" fill="#f8f8fc"/>' +
+        '<polygon points="' + V.map(function (v) { return px(v[0]) + "," + py(v[1]); }).join(" ") + '" fill="#0AA6B71a" stroke="#0AA6B7" stroke-dasharray="3,3"/>';
+      V.forEach(function (v, j) {
+        sv += '<circle cx="' + px(v[0]) + '" cy="' + py(v[1]) + '" r="5" fill="#000E54"/>' +
+          '<text x="' + (px(v[0]) + 7) + '" y="' + (py(v[1]) - 5) + '" font-size="10">v' + (j + 1) + '</text>';
+      });
+      sv += '<circle cx="' + px(out[0]) + '" cy="' + py(out[1]) + '" r="6" fill="#F76900"/>' +
+        '<text x="' + (px(out[0]) + 8) + '" y="' + (py(out[1]) + 4) + '" font-size="10" fill="#F76900">out</text>';
+      $("attn-svg").innerHTML = sv;
+    }
+    ["attn-q1", "attn-q2"].forEach(function (id) { $(id).addEventListener("input", recompute); });
+    $("attn-mask").addEventListener("change", recompute);
+    recompute();
+  })();
+
+  /* ---------- 5. LayerNorm calculator ---------- */
+  (function () {
+    function recompute() {
+      var a = $("ln-in").value.split(",").map(parseFloat).filter(function (x) { return !isNaN(x); });
+      if (!a.length) { $("ln-out").textContent = "enter numbers"; return; }
+      var n = a.length;
+      var m = a.reduce(function (s, x) { return s + x; }, 0) / n;
+      var v = a.reduce(function (s, x) { return s + (x - m) * (x - m); }, 0) / n;
+      var o = a.map(function (x) { return fmt((x - m) / Math.sqrt(v + 1e-5)); });
+      $("ln-out").textContent = "mean = " + fmt(m) + "   var = " + fmt(v) + "\nLN(x) = [" + o.join(", ") + "]   (then scaled by gamma, shifted by beta)";
+    }
+    $("ln-in").addEventListener("input", recompute);
+    recompute();
+  })();
+
+  /* ---------- 6. Emergence mirage ---------- */
+  (function () {
+    var svg = $("em-svg");
+    function a(s) { return 1 / (1 + Math.exp(-(s - 5) * 1.1)); }  // smooth logistic in "scale"
+    function draw() {
+      var k = parseInt($("em-k").value, 10);
+      $("em-k-val").textContent = k;
+      var sv = '<line x1="40" y1="210" x2="540" y2="210" stroke="#999"/>' +
+        '<line x1="40" y1="20" x2="40" y2="210" stroke="#999"/>' +
+        '<text x="290" y="232" font-size="11" text-anchor="middle" fill="#667">scale (log compute) &#8594;</text>' +
+        '<text x="60" y="34" font-size="11" fill="#0AA6B7">per-token accuracy a (smooth)</text>' +
+        '<text x="60" y="50" font-size="11" fill="#F76900">exact-match a^k (k = ' + k + ')</text>';
+      var p1 = [], p2 = [];
+      for (var i = 0; i <= 100; i++) {
+        var s = i / 10, x = 40 + i * 5;
+        p1.push(x + "," + (210 - a(s) * 185));
+        p2.push(x + "," + (210 - Math.pow(a(s), k) * 185));
+      }
+      sv += '<polyline fill="none" stroke="#0AA6B7" stroke-width="2.5" points="' + p1.join(" ") + '"/>';
+      sv += '<polyline fill="none" stroke="#F76900" stroke-width="2.5" points="' + p2.join(" ") + '"/>';
+      svg.innerHTML = sv;
+    }
+    $("em-k").addEventListener("input", draw);
+    draw();
+  })();
+
+  /* ---------- 7. Temperature / top-p sampler ---------- */
+  (function () {
+    var toks = ["Paris", "paris", "the", "located", "a", "known", "France", "PARIS"];
+    var logits = [5.0, 2.2, 1.4, 1.0, 0.6, 0.3, 0.1, -0.4];
+    var cur = { probs: [], kept: [] };
+    function recompute() {
+      var T = parseFloat($("sm-T").value), topp = parseFloat($("sm-p").value);
+      $("sm-T-val").textContent = fmt(T, 1); $("sm-p-val").textContent = fmt(topp, 2);
+      var p = softmax(logits.map(function (z) { return z / T; }));
+      var idx = p.map(function (_, i) { return i; }).sort(function (a, b) { return p[b] - p[a]; });
+      var cum = 0, kept = {};
+      for (var j = 0; j < idx.length; j++) { kept[idx[j]] = true; cum += p[idx[j]]; if (cum >= topp) break; }
+      var mass = 0; for (var i2 = 0; i2 < p.length; i2++) if (kept[i2]) mass += p[i2];
+      var q = p.map(function (v, i3) { return kept[i3] ? v / mass : 0; });
+      cur.probs = q; cur.kept = kept;
+      var bars = "";
+      for (var i = 0; i < toks.length; i++) {
+        bars += '<div class="bar-row"><span class="blab">' + toks[i] + '</span>' +
+          '<span class="btrack"><span class="bfill' + (kept[i] ? "" : " cut") + '" style="width:' + (p[i] * 100) + '%"></span></span>' +
+          '<span class="bval">' + fmt(kept[i] ? q[i] : p[i]) + (kept[i] ? "" : " ✂") + '</span></div>';
+      }
+      $("sm-bars").innerHTML = bars;
+    }
+    $("sm-draw").addEventListener("click", function () {
+      var draws = [];
+      for (var d = 0; d < 20; d++) {
+        var r = Math.random(), c = 0;
+        for (var i = 0; i < cur.probs.length; i++) { c += cur.probs[i]; if (r <= c) { draws.push(toks[i]); break; } }
+      }
+      $("sm-out").textContent = draws.join(" · ");
+    });
+    ["sm-T", "sm-p"].forEach(function (id) { $(id).addEventListener("input", recompute); });
+    recompute();
+  })();
+
+  /* ---------- 8. KV / training memory calculator ---------- */
+  (function () {
+    function recompute() {
+      var L = parseFloat($("kv-L").value), d = parseFloat($("kv-d").value),
+          n = parseFloat($("kv-n").value), b = parseFloat($("kv-b").value),
+          P = parseFloat($("kv-p").value);
+      if ([L, d, n, b, P].some(isNaN)) { $("kv-out").textContent = "enter numbers"; return; }
+      var perTok = 2 * L * d * 2;                       // fp16: 2 bytes
+      var perSeq = perTok * n, batch = perSeq * b;
+      var GiB = 1024 * 1024 * 1024;
+      var weights = P * 1e9 * 2, train = P * 1e9 * 16;
+      $("kv-out").textContent =
+        "KV cache:  " + fmt(perTok / 1024 / 1024, 3) + " MiB/token   " +
+        fmt(perSeq / GiB, 2) + " GiB/sequence (n=" + n + ")   " +
+        fmt(batch / GiB, 1) + " GiB for batch of " + b + "\n" +
+        "weights (fp16 inference):  " + fmt(weights / GiB, 1) + " GiB\n" +
+        "training (16 B/param, Adam + mixed precision, before activations):  " + fmt(train / GiB, 0) + " GiB" +
+        (train / GiB > 80 ? "   -> does not fit one 80 GB GPU; shard (ZeRO/FSDP)" : "");
+    }
+    ["kv-L", "kv-d", "kv-n", "kv-b", "kv-p"].forEach(function (id) { $(id).addEventListener("input", recompute); });
+    recompute();
+  })();
+});
+</script>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <!-- <h2 class="footer-heading">CIS400</h2> -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>CIS400</li>
+          <li><a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

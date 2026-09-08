@@ -159,7 +159,7 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
           <li><i class="fa-solid fa-display notes-icon"></i> <a href="/ai-security-course/slides/03-ml-background/">Slides</a></li>
           <li><i class="fa-solid fa-pen-to-square"></i> <a href="/ai-security-course/notes/03-ml-background/">Interactive notes</a> &mdash; work through it yourself</li>
           <li><i class="fa-solid fa-flask"></i> Linear and logistic regression, GLMs, overfitting, base rates</li>
-          
+          <li><i class="fa-solid fa-code"></i> <a href="/ai-security-course/labs/spam-classification/">Lab: spam classification, four ways</a></li>
         </ul>
       </div>
     </li>
@@ -176,9 +176,13 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
             Demo: tokens, next-token prediction, and the scratchpad &mdash;
             <a href="https://colab.research.google.com/github/kmicinski/ai-security-course/blob/main/examples/04-llm-reasoning/llm_reasoning_demo.ipynb">run in Colab</a>
             &middot; new to Colab? <a href="/ai-security-course/colab">start here</a></li>
+          <li><i class="fa-solid fa-video"></i>
+            Optional &mdash; 3Blue1Brown,
+            <a href="https://www.youtube.com/watch?v=Ilg3gGewQ5U">"Backpropagation, intuitively"</a> (Ch. 3) and
+            <a href="https://www.youtube.com/watch?v=tIeHLnjs5U8">"Backpropagation calculus"</a> (Ch. 4)</li>
           <li><i class="fa-solid fa-book-open reading-icon"></i>
             Panfilov et al., <a href="https://arxiv.org/pdf/2608.09867">"Stealing Reasoning Traces from Proprietary LLM APIs"</a> (2026)</li>
-          
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Optional deep-dive: <a href="/ai-security-course/notes/03-ml-llm-crash-course/">interactive notes</a></li>
         </ul>
       </div>
     </li>
@@ -186,12 +190,54 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
 </div>
 
 <div class="week-header">
-  <h2><i class="fa-solid fa-calendar-week"></i> Week 3 &middot; Reverse Engineering &amp; Memory Attacks</h2>
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 3 &middot; LLM Agents, Tool Use &amp; Agent Security</h2>
 </div>
 <div class="week-schedule">
   <ul>
     <li class="session-item">
       <div class="date-col">9/8</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          LLM Agents &amp; Tool Use: The Agent Loop, Trust Boundaries, and the Control/Data Collapse
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-display notes-icon"></i> <a href="/ai-security-course/slides/05-llm-agents-tool-use/">Slides</a></li>
+          <li><i class="fa-solid fa-flask"></i> The agent loop as code; tool-call wire format; indirect injection, exfiltration channels, the confused deputy</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i>
+            Odersky, Zhao, Xu, Bra&ccaron;evac &amp; Pham,
+            <a href="https://doi.org/10.1145/3786335.3813127">"Securing Agents With Tracked Capabilities"</a>
+            (CAIS '26) &mdash; read &sect;1&ndash;3 for Tuesday
+            (<a href="https://www.yichenxu.me/files/publications/securing-agents/paper.pdf">open-access PDF</a>)</li>
+        </ul>
+      </div>
+    </li>
+    <li class="session-item">
+      <div class="date-col">9/10</div>
+      <div class="session-col">
+        <div class="session-title">
+          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
+          Securing Agentic Systems: Capabilities, Information Flow &amp; What Defenses Actually Buy <span class="tentative">(tentative)</span>
+        </div>
+        <ul class="resources-inline">
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #1 &mdash; Odersky et al., "Securing Agents With Tracked Capabilities" (TACIT)</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i>
+            Same paper, &sect;4&ndash;6: the experiments, the alternatives, and the threat model's trusted base</li>
+          <li><i class="fa-solid fa-flask"></i> Least privilege, allowlisted egress, taint/provenance, quarantined-LLM patterns &mdash; and why confirmation prompts fail in practice</li>
+          <li><i class="fa-solid fa-code"></i> <a href="https://github.com/lampepfl/tacit">lampepfl/tacit</a> &mdash; the capability-tracking MCP server from the paper</li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="week-header">
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 4 &middot; Reverse Engineering &amp; Memory Attacks</h2>
+</div>
+<div class="week-schedule">
+  <ul>
+    <li class="session-item">
+      <div class="date-col">9/15</div>
       <div class="session-col">
         <div class="session-title">
           <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
@@ -206,7 +252,7 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
       </div>
     </li>
     <li class="session-item">
-      <div class="date-col">9/10</div>
+      <div class="date-col">9/17</div>
       <div class="session-col">
         <div class="session-title">
           <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
@@ -214,7 +260,7 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
         </div>
         <ul class="resources-inline">
           
-          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #1 &mdash; Shacham, "The Geometry of Innocent Flesh on the Bone" (ROP)</li>
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #2 &mdash; Shacham, "The Geometry of Innocent Flesh on the Bone" (ROP)</li>
         </ul>
       </div>
     </li>
@@ -222,46 +268,7 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
 </div>
 
 <div class="week-header">
-  <h2><i class="fa-solid fa-calendar-week"></i> Week 4 &middot; Mitigations &amp; AI-Assisted Exploitation</h2>
-</div>
-<div class="week-schedule">
-  <ul>
-    <li class="session-item">
-      <div class="date-col">9/15</div>
-      <div class="session-col">
-        <div class="session-title">
-          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
-          Exploit Primitives &amp; Mitigations: ASLR, DEP/NX, Canaries, CFI <span class="tentative">(tentative)</span>
-        </div>
-        <ul class="resources-inline">
-          
-          <li><i class="fa-solid fa-book-open reading-icon"></i> Anderson, Ch. 4 (Access Control)</li>
-          
-        </ul>
-      </div>
-    </li>
-    <li class="session-item">
-      <div class="date-col">9/17</div>
-      <div class="session-col">
-        <div class="session-title">
-          <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
-          AI-Assisted Exploitation: Can a Model Write the Exploit? <span class="tentative">(tentative)</span>
-        </div>
-        <ul class="resources-inline">
-          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #2</li>
-          
-          <li><i class="fa-solid fa-book-open reading-icon"></i> Fang et al. (2024) + critiques</li>
-        </ul>
-        <ul class="resources-inline">
-          
-        </ul>
-      </div>
-    </li>
-  </ul>
-</div>
-
-<div class="week-header">
-  <h2><i class="fa-solid fa-calendar-week"></i> Week 5 &middot; Automated Exploit Generation</h2>
+  <h2><i class="fa-solid fa-calendar-week"></i> Week 5 &middot; Mitigations &amp; Automated Exploit Generation</h2>
 </div>
 <div class="week-schedule">
   <ul>
@@ -270,11 +277,13 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
       <div class="session-col">
         <div class="session-title">
           <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
-          Automated Exploit Generation I: Symbolic Execution &amp; Constraint Solving <span class="tentative">(tentative)</span>
+          Exploit Primitives, Mitigations &amp; Symbolic Execution <span class="tentative">(tentative)</span>
         </div>
         <ul class="resources-inline">
           
-          <li><i class="fa-solid fa-book-open reading-icon"></i> KLEE (OSDI '08); AEG (NDSS '11)</li>
+          <li><i class="fa-solid fa-flask"></i> ASLR, DEP/NX, canaries, CFI &mdash; then path conditions, constraint solving, and a solved input</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> KLEE (OSDI '08); AEG (NDSS '11); Anderson, Ch. 4 (Access Control)</li>
+          
         </ul>
       </div>
     </li>
@@ -283,12 +292,13 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
       <div class="session-col">
         <div class="session-title">
           <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
-          Automated Exploit Generation II: LLM-Guided Fuzzing &amp; the Bug&rarr;Exploit Gap <span class="tentative">(tentative)</span>
+          AI-Assisted Exploitation: LLM-Guided Fuzzing &amp; the Bug&rarr;Exploit Gap <span class="tentative">(tentative)</span>
         </div>
         <ul class="resources-inline">
           
-          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #3</li>
-          <li><i class="fa-solid fa-book-open reading-icon"></i> Cha et al., Mayhem (S&amp;P '12)</li>
+          <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #3 &mdash; Cha et al., Mayhem (S&amp;P '12)</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Fang et al. (2024) + critiques &mdash; demand the denominator</li>
+          
         </ul>
       </div>
     </li>
