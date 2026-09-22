@@ -273,12 +273,12 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
       <div class="session-col">
         <div class="session-title">
           <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
-          Exploit Primitives, Mitigations &amp; Symbolic Execution <span class="tentative">(tentative)</span>
+          Reverse Engineering II: Writing an Exploit, System-Level Defenses &amp; Coverage-Guided Fuzzing
         </div>
         <ul class="resources-inline">
-          
-          <li><i class="fa-solid fa-flask"></i> ASLR, DEP/NX, canaries, CFI &mdash; then path conditions, constraint solving, and a solved input</li>
-          <li><i class="fa-solid fa-book-open reading-icon"></i> KLEE (OSDI '08); AEG (NDSS '11); Anderson, Ch. 4 (Access Control)</li>
+          <li><i class="fa-solid fa-display notes-icon"></i> <a href="/ai-security-course/slides/07-exploit-generation/">Slides</a> (deck runs across 9/22 and 9/24)</li>
+          <li><i class="fa-solid fa-flask"></i> A worked stack-smash on a tiny TCP service; canaries, NX/DEP, ROP, ASLR, PIE, RELRO, CFI &amp; shadow stacks; then fuzzing as search &mdash; harnesses, edge coverage, AFL's trace map, corpus evolution</li>
+          <li><i class="fa-solid fa-book-open reading-icon"></i> Background: KLEE (OSDI '08); AEG (NDSS '11)</li>
           
         </ul>
       </div>
@@ -288,13 +288,13 @@ Kristopher Micinski (<a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a>). Se
       <div class="session-col">
         <div class="session-title">
           <i class="fa-solid fa-chalkboard-user lecture-icon"></i>
-          AI-Assisted Exploitation: LLM-Guided Fuzzing &amp; the Bug&rarr;Exploit Gap <span class="tentative">(tentative)</span>
+          Symbolic Execution, SMT Solving &amp; Mayhem: Automatic Exploit Generation on Binaries
         </div>
         <ul class="resources-inline">
-          
+          <li><i class="fa-solid fa-display notes-icon"></i> <a href="/ai-security-course/slides/07-exploit-generation/">Slides</a> (continued from 9/22)</li>
+          <li><i class="fa-solid fa-flask"></i> Path conditions, forking, the symbolic memory model, QF_BV and SMT-LIB, path explosion, concolic and hybrid fuzzing</li>
           <li><i class="fa-solid fa-person-chalkboard presentation-icon"></i> Presentation #3 &mdash; Cha et al., Mayhem (S&amp;P '12)</li>
-          <li><i class="fa-solid fa-book-open reading-icon"></i> Fang et al. (2024) + critiques &mdash; demand the denominator</li>
-          
+          <li><i class="fa-solid fa-comments discussion-icon"></i> Discussion: Cha, Avgerinos, Rebert &amp; Brumley, <a href="https://users.ece.cmu.edu/~aavgerin/papers/mayhem-oakland-12.pdf">"Unleashing Mayhem on Binary Code"</a> (S&amp;P '12) &mdash; read before class</li>
         </ul>
       </div>
     </li>
