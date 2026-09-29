@@ -1,0 +1,1299 @@
+<!doctype html>
+<!-- Generated from deck.md by slides. Edit deck.md, not this file. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>CIS 400 — Cyber Reasoning Systems</title>
+    <link rel="stylesheet" href="../engine/reveal/dist/reset.css" />
+    <link rel="stylesheet" href="../engine/reveal/dist/reveal.css" />
+    <link rel="stylesheet" href="../engine/katex/katex.min.css" />
+    <link rel="stylesheet" href="../themes/cis400/base.css" />
+    <link rel="stylesheet" href="../themes/cis400/highlight.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/big-point.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/callout.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/figure.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/footer.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/playground.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/section-divider.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/source.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/stat.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/title-slide.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/trace.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/two-col.css" />
+    <style>
+      /* Slides a pending proposal adds or changes (live preview of the proposed deck only). */
+      .reveal .slides section[data-proposed] { outline: 4px dashed #cb4b16; outline-offset: -4px; }
+      .reveal .slides section[data-proposed]::before {
+        content: "proposed · " attr(data-proposed); position: absolute; top: 10px; right: 14px; z-index: 5;
+        background: #cb4b16; color: #fff; font: 700 15px/1 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+        letter-spacing: .06em; text-transform: uppercase; padding: 6px 10px; border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+<section class="title-slide">
+<!-- title: CIS 400 — Cyber Reasoning Systems -->
+<!-- theme: cis400 -->
+<!-- .slide: class="title-slide" -->
+<p data-line="4"><span class="course-tag">CIS 400 / 600 • Syracuse University</span></p>
+<h1 data-line="6">Cyber Reasoning Systems</h1>
+<h2 data-line="8">SMT, vulnerability discovery, and AI-assisted program analysis</h2>
+<h3 data-line="9">Prof. Kristopher Micinski</h3>
+<div data-line="11" class="footer">cis400 &bull; cybersecurity &amp; ai</div>
+</section>
+<section>
+<h2 data-line="15">Disclaimer: how I make slides</h2>
+<ul>
+<li data-line="17"><p data-line="17">I use an AI-integrated slide-making app here:</p>
+<ul>
+<li data-line="18">https://github.com/kmicinski/slides</li>
+</ul>
+</li>
+<li data-line="20"><p data-line="20">I initially dictate the slides at a high level, and then generate a markdown document</p>
+</li>
+<li data-line="21"><p data-line="21">I use an AI agent to make figures for the slides</p>
+</li>
+<li data-line="22"><p data-line="22">Writing on the slides and the general structure is developed by me</p>
+<ul>
+<li data-line="23">But I often use AI for copyediting on my slides</li>
+</ul>
+</li>
+<li data-line="25"><p data-line="25">Please let me know if you notice any mistakes, kkmicins@syr.edu</p>
+</li>
+</ul>
+</section>
+<section>
+<h2 data-line="29">High-level picture: what's the goal?</h2>
+<ul>
+<li data-line="31">We want to find a <em>safety violation</em>: identify a <strong>bug</strong> in a program</li>
+<li data-line="32">We can often see this in terms of <em>reachability</em>:
+<ul>
+<li data-line="33">Is it possible to reach / drive the program execution to an <strong>exploited state</strong> starting from its <em>normal</em> path of execution?</li>
+</ul>
+</li>
+</ul>
+<p data-line="35">For example...</p>
+<pre data-line="37"><code class="c">if (len &lt; 64 &amp;&amp; magic == 0x41424344) {
+  memcpy(buf, input, len + 16);
+}
+</code></pre>
+<p data-line="42">We might ask...</p>
+<blockquote data-line="43"><p data-line="43">Is there any input that reaches this point while violating a memory safety condition?</p>
+</blockquote>
+</section>
+<section>
+<h2 data-line="47">Many ways to identify safety violations</h2>
+<ul>
+<li data-line="49">Computer science has explored many ways of finding (memory, etc.) safety violations
+<ul>
+<li data-line="50">Testing</li>
+<li data-line="51">Fuzzing</li>
+<li data-line="52">Reachability-based program analysis / abstract interpretation / etc.</li>
+<li data-line="53">Symbolic execution</li>
+<li data-line="54">Program logics</li>
+</ul>
+</li>
+<li data-line="55">All of these rely upon different formal foundations.
+<ul>
+<li data-line="56">For example, abstract interpretation uses properties of lattices and monotonic functions defined over these lattices.</li>
+<li data-line="57">Meanwhile, symbolic execution uses SAT/SMT</li>
+</ul>
+</li>
+</ul>
+</section>
+<section>
+<h2 data-line="61">This lecture</h2>
+<ul>
+<li data-line="63"><p data-line="63">This class we'll talk about SMT and symbolic execution, along with cyber-reasoning systems that put LLMs in a loop with tools including SMT, SE, etc.</p>
+</li>
+<li data-line="65"><p data-line="65">Next class we'll take a look at <em>program analysis</em> and how it can be implemented.</p>
+</li>
+<li data-line="67"><p data-line="67">Later in the class we'll study how we can harmonize these things, adding program analysis as a tool to the cyber-reasoning pipeline...</p>
+</li>
+</ul>
+</section>
+<section>
+<h2 data-line="71">Symbolic execution versus program analysis</h2>
+<div data-line="73" class="figure">
+<svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="sepa-fog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#d4d4d4" stop-opacity="0.95"/></linearGradient>
+</defs>
+<text class="fig-title" x="285" y="34" text-anchor="middle">Symbolic execution</text>
+<text class="fig-small" x="285" y="58" text-anchor="middle" style="fill:#8c8c8c">enumerate paths, one at a time</text>
+<text class="fig-title" x="905" y="34" text-anchor="middle">Program analysis</text>
+<text class="fig-small" x="905" y="58" text-anchor="middle" style="fill:#8c8c8c">over-approximate all behaviors at once</text>
+<line x1="597" y1="76" x2="597" y2="590" stroke="#e0e0e0" stroke-width="2"/>
+<g class="fragment" data-fragment-index="2"><rect x="30" y="322" width="525" height="120" fill="url(#sepa-fog)"/></g>
+<g fill="none" stroke="#3b6ea5" stroke-width="3.5" stroke-linecap="round">
+<path d="M285,108 C285,131 190,131 190,154"/>
+<path d="M285,108 C285,131 380,131 380,154"/>
+<path d="M190,154 C190,180 120,180 120,207"/>
+<path d="M190,154 C190,180 245,180 245,207"/>
+<path d="M380,154 C380,180 325,180 325,207"/>
+<path d="M380,154 C380,180 455,180 455,207"/>
+<path d="M120,207 C120,234 150,234 150,260"/>
+<path d="M245,207 C245,234 215,234 215,260"/>
+<path d="M245,207 C245,234 285,234 285,260"/>
+<path d="M325,207 C325,234 320,234 320,260"/>
+<path d="M325,207 C325,234 385,234 385,260"/>
+<path d="M455,207 C455,234 450,234 450,260"/>
+<path d="M455,207 C455,234 520,234 520,260"/>
+<path d="M150,260 C150,288 165,288 165,315"/>
+<path d="M215,260 C215,288 210,288 210,315"/>
+<path d="M285,260 C285,288 290,288 290,315"/>
+<path d="M320,260 C320,288 340,288 340,315"/>
+<path d="M385,260 C385,288 400,288 400,315"/>
+<path d="M450,260 C450,288 460,288 460,315"/>
+<path d="M520,260 C520,330 540,380 540,448"/>
+</g>
+<path d="M120,207 C120,227 80,227 80,247" fill="none" stroke="#a8a8a8" stroke-width="3" stroke-dasharray="5 5"/>
+<path d="M74,241 L86,253 M86,241 L74,253" stroke="#a8a8a8" stroke-width="2.5" stroke-linecap="round"/>
+<text class="fig-small" x="80" y="275" text-anchor="middle" style="fill:#8c8c8c">infeasible</text>
+<g fill="#3b6ea5">
+<circle cx="190" cy="154" r="6"/><circle cx="380" cy="154" r="6"/>
+<circle cx="120" cy="207" r="6"/><circle cx="245" cy="207" r="6"/><circle cx="325" cy="207" r="6"/><circle cx="455" cy="207" r="6"/>
+<circle cx="150" cy="260" r="5"/><circle cx="215" cy="260" r="5"/><circle cx="285" cy="260" r="5"/><circle cx="320" cy="260" r="5"/><circle cx="385" cy="260" r="5"/><circle cx="450" cy="260" r="5"/><circle cx="520" cy="260" r="5"/>
+</g>
+<g fill="#ffffff" stroke="#3b6ea5" stroke-width="3">
+<circle cx="165" cy="315" r="7"/><circle cx="210" cy="315" r="7"/><circle cx="290" cy="315" r="7"/><circle cx="340" cy="315" r="7"/><circle cx="400" cy="315" r="7"/><circle cx="460" cy="315" r="7"/>
+</g>
+<rect class="fig-box" x="215" y="74" width="140" height="34" rx="10"/>
+<text class="fig-small" x="285" y="97" text-anchor="middle">program</text>
+<rect x="40" y="448" width="515" height="34" rx="8" fill="#f5f5f5" stroke="#c8c8c8" stroke-width="2"/>
+<text class="fig-small" x="56" y="471" style="fill:#8c8c8c">program exit</text>
+<g class="fragment" data-fragment-index="1">
+<circle cx="165" cy="315" r="11" fill="#d0021b"/>
+<path d="M159,309 L171,321 M171,309 L159,321" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+<text class="fig-small fig-danger" x="138" y="304" text-anchor="end" style="font-weight:600">bug found</text>
+<circle cx="540" cy="465" r="11" fill="#2e8b57"/>
+<path d="M534,465 L538.5,470 L547,460" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text class="fig-small" x="522" y="471" text-anchor="end" style="fill:#2e8b57;font-weight:600">one complete path</text>
+</g>
+<g class="fragment" data-fragment-index="2">
+<g fill="none" stroke="#b4b4b4" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round">
+<path d="M210,315 C210,346 195,346 195,378"/><path d="M210,315 C210,346 232,346 232,378"/>
+<path d="M290,315 C290,346 272,346 272,378"/><path d="M290,315 C290,346 308,346 308,378"/>
+<path d="M340,315 C340,346 332,346 332,378"/><path d="M340,315 C340,346 362,346 362,378"/>
+<path d="M400,315 C400,346 388,346 388,378"/><path d="M400,315 C400,346 420,346 420,378"/>
+<path d="M460,315 C460,346 445,346 445,378"/><path d="M460,315 C460,346 490,346 490,376"/>
+</g>
+<text class="fig-small" x="213" y="404" text-anchor="middle" style="fill:#9a9a9a;font-weight:700">?</text>
+<text class="fig-small" x="290" y="404" text-anchor="middle" style="fill:#9a9a9a;font-weight:700">?</text>
+<text class="fig-small" x="347" y="404" text-anchor="middle" style="fill:#9a9a9a;font-weight:700">?</text>
+<text class="fig-small" x="404" y="404" text-anchor="middle" style="fill:#9a9a9a;font-weight:700">?</text>
+<text class="fig-small" x="445" y="404" text-anchor="middle" style="fill:#9a9a9a;font-weight:700">?</text>
+<circle cx="490" cy="376" r="9" fill="#d0021b" fill-opacity="0.35"/>
+<text class="fig-small fig-danger" x="500" y="404" text-anchor="middle" opacity="0.7" style="font-weight:600">bug?</text>
+<text class="fig-small" x="270" y="434" text-anchor="middle" style="fill:#8c8c8c;font-style:italic">unexplored: a bug may still be down here</text>
+<circle cx="62" cy="508" r="7" fill="#ffffff" stroke="#3b6ea5" stroke-width="3"/>
+<text class="fig-small" x="76" y="514" style="fill:#8c8c8c">partial trace: stopped early, no verdict</text>
+<text class="fig-small" x="285" y="550" text-anchor="middle">finds real bugs; cannot prove their absence</text>
+<text class="fig-small fig-orange" x="285" y="578" text-anchor="middle" style="font-weight:600">⇒ a form of testing</text>
+</g>
+<g class="fragment" data-fragment-index="3">
+<ellipse cx="890" cy="290" rx="240" ry="165" fill="#3b6ea5" fill-opacity="0.10" stroke="#3b6ea5" stroke-width="2.5" stroke-dasharray="10 6"/>
+<text class="fig-small" x="890" y="172" text-anchor="middle" style="fill:#1f3a5f;font-weight:600">over-approximation</text>
+<text class="fig-small" x="890" y="204" text-anchor="middle" style="fill:#5b7fa6">lattices · fixpoints · dataflow</text>
+<path d="M738,318 C730,272 778,232 838,238 C883,244 905,270 942,262 C988,256 996,312 980,350 C962,388 935,410 878,414 C828,418 812,382 780,388 C748,393 742,352 738,318 Z" fill="#3b6ea5" fill-opacity="0.35" stroke="#1f3a5f" stroke-width="2.5"/>
+<text class="fig-small" x="858" y="322" text-anchor="middle" style="fill:#0f2440;font-weight:600">actual behaviors</text>
+<text class="fig-small" x="858" y="348" text-anchor="middle" style="fill:#0f2440">every real run</text>
+</g>
+<g class="fragment" data-fragment-index="4">
+<ellipse cx="1100" cy="395" rx="72" ry="48" fill="#d0021b" fill-opacity="0.22" stroke="#d0021b" stroke-width="2"/>
+<text class="fig-small fig-danger" x="1106" y="392" text-anchor="middle" style="font-weight:600">bad states</text>
+<ellipse cx="1140" cy="165" rx="48" ry="34" fill="#d0021b" fill-opacity="0.22" stroke="#d0021b" stroke-width="2"/>
+<text class="fig-small fig-danger" x="1140" y="161" text-anchor="middle" style="font-weight:600">bad</text>
+<text class="fig-small fig-danger" x="1140" y="185" text-anchor="middle" style="font-weight:600">states</text>
+<text class="fig-small" x="1190" y="118" text-anchor="end" style="fill:#2e8b57;font-weight:600">✓ provably unreachable</text>
+<circle cx="1042" cy="410" r="5" fill="#d0021b"/>
+<path d="M1042,410 L1008,468" stroke="#d0021b" stroke-width="2"/>
+<text class="fig-small fig-danger" x="1000" y="492" text-anchor="middle" style="font-weight:600">false alarm</text>
+<text class="fig-small" x="1000" y="516" text-anchor="middle" style="fill:#8c8c8c">in the math, not in reality</text>
+<text class="fig-small" x="905" y="550" text-anchor="middle">proves absence; may raise false alarms</text>
+<text class="fig-small fig-orange" x="905" y="578" text-anchor="middle" style="font-weight:600">⇒ a form of proof</text>
+</g>
+</svg>
+</div>
+<aside class="notes">
+<p data-line="176">Build with the arrow keys.</p>
+<p data-line="178">(0) The tree. Symbolic execution starts at the program entry and forks at every branch. Each path is a conjunction of branch conditions; the solver prunes branches whose condition is infeasible (the grey stub). Every path is trying to reach the exit.</p>
+<p data-line="180">(1) Two paths actually finish. One hits a bug: that is a real, reproducible finding, and it is the reason we run the tool. One reaches the exit: a single complete trace with no bug on it.</p>
+<p data-line="182">(2) Everything else is a partial trace. Budgets run out, solvers time out, the tree explodes. A partial trace that has not hit a bug is not a verdict about anything below it: the fog may hide a bug, or it may not. So "no bug found" is not "no bug". The explored paths are a subset of the real behaviors (explored ⊆ real), which is exactly the shape of testing. Dijkstra: testing shows the presence of bugs, never their absence.</p>
+<p data-line="184">(3) Program analysis flips the direction. Instead of enumerating runs, it computes a mathematical description of the program (an abstract domain, a fixpoint over a lattice, a dataflow solution) that is guaranteed to contain every real behavior (real ⊆ abstract). The blob is messy; the bubble is a simple shape the math can compute.</p>
+<p data-line="186">(4) If the bad states lie outside the bubble, they are provably unreachable: a proof, not a test. The price of the bubble being bigger than reality: bad states that fall into the gap are false alarms, possible in the abstraction and impossible in any real run.</p>
+<p data-line="188">Next lecture is program analysis proper. A CRS wants both kinds of evidence: real bugs from the testing side, proofs and pruning from the analysis side.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="192">SAT versus SMT</h2>
+<p data-line="194">Propositional <strong>SAT</strong> asks whether a Boolean formula can be made true.</p>
+<p data-line="196"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>∨</mo><mi>y</mi><mo stretchy="false">)</mo><mo>∧</mo><mo stretchy="false">(</mo><mi mathvariant="normal">¬</mi><mi>x</mi><mo>∨</mo><mi>z</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">
+(x \lor y) \land (\neg x \lor z)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">¬</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mclose">)</span></span></span></span></span></p>
+<ul>
+<li data-line="200">Can use SAT to ask: "does a counterexample exist?". The variables are implicitly existentially quantified. So it's really, "does there <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∃</mi><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo separator="true">,</mo><mi>z</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\exists x,y,z.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord">∃</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mord">.</span></span></span></span> s.t. the formula <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>∨</mo><mi>y</mi><mo stretchy="false">)</mo><mo>∧</mo><mo stretchy="false">(</mo><mi mathvariant="normal">¬</mi><mi>x</mi><mo>∨</mo><mi>z</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x \lor y) \land (\neg x \lor z)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">¬</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∨</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mclose">)</span></span></span></span> is true?"</li>
+</ul>
+<p data-line="202">By contrast, <strong>SMT</strong> asks whether a formula is satisfiable <em>modulo a first-order theory</em>:</p>
+<p data-line="204"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mn>0</mn><mo>≤</mo><mi>n</mi><mo>&lt;</mo><mn>64</mn><mo>∧</mo><mi>n</mi><mo>+</mo><mn>16</mn><mo>&gt;</mo><mn>72</mn></mrow><annotation encoding="application/x-tex">
+0 \le n &lt; 64 \land n + 16 &gt; 72
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7804em;vertical-align:-0.136em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">64</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6835em;vertical-align:-0.0391em;"></span><span class="mord">16</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">72</span></span></span></span></span></p>
+<p data-line="208">Here, the symbols <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≤</mo></mrow><annotation encoding="application/x-tex">\leq</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mrel">≤</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo></mrow><annotation encoding="application/x-tex">&lt;</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mrel">&lt;</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo></mrow><annotation encoding="application/x-tex">+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord">+</span></span></span></span>, and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&gt;</mo></mrow><annotation encoding="application/x-tex">&gt;</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mrel">&gt;</span></span></span></span> appeal to a theory of <em>arithmetic</em></p>
+<ul>
+<li data-line="209">Can't be <strong>all</strong> of arithmetic, that would be impossible (Gödel's incompleteness theorems)</li>
+</ul>
+<p data-line="211" class="source">Background: de Moura and Bjørner, "Z3: An Efficient SMT Solver," TACAS 2008; Barrett et al., "The SMT-LIB Standard."</p>
+<aside class="notes">
+<p data-line="214">Start the SMT section here. The verbal contrast should be: SAT knows only true/false structure. SMT additionally knows something about the objects being talked about.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="218">How is SMT solving useful in vulnerability discovery?</h2>
+<p data-line="220">Security questions often mix control flow with low-level data facts:</p>
+<ul>
+<li data-line="222">Can attacker input reach this branch?</li>
+<li data-line="223">Can a length arithmetic operation wrap around?</li>
+<li data-line="224">Can two pointers alias?</li>
+<li data-line="225">Can a string satisfy a parser's checks?</li>
+</ul>
+<p data-line="227">SMT is useful because these are not just Boolean questions. They involve machine integers, memory, strings, and path reachability.</p>
+<blockquote data-line="229"><p data-line="229">The challenge is how to phrase our attack-relevant statements in the language of SMT</p>
+</blockquote>
+</section>
+<section>
+<h2 data-line="233">Is "SMT" really <em>AI</em>?</h2>
+<ul>
+<li data-line="235">SAT solving is classic <em>symbolic AI</em>.
+<ul>
+<li data-line="236">SMT solvers still incorporate aspects of SAT solving, e.g., DPLL(T), CDCL, clause learning, etc.</li>
+</ul>
+</li>
+<li data-line="237">SMT solvers are an extension of SAT to <em>first-order theories</em></li>
+<li data-line="238">What about modern LLMs? Do we really need SMT in the age of modern LLMs and tools?
+<ul>
+<li data-line="239">As far as I know, this is an open question--one we will try to explore...</li>
+</ul>
+</li>
+</ul>
+</section>
+<section>
+<h2 data-line="244">How SMT solving works, the 1000-foot view</h2>
+<ul>
+<li data-line="245"><p data-line="245">SMT tries to <strong>build</strong> an assignment by guessing at unconstrained variables and then <em>forcing implications</em>. For example, if we guess x = 5 and we have <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>&lt;</mo><mn>0</mn><mo>→</mo><mi>y</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">x &lt; 0 \to y = 5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5</span></span></span></span>, we must have <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">y=5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5</span></span></span></span></p>
+<ul>
+<li data-line="246">This is called <em>propagation</em>; in this case <em>theory</em> propagation, since we are appealing to the theory of arithmetic</li>
+</ul>
+</li>
+<li data-line="248"><p data-line="248">A <strong>SAT engine</strong> explores the SAT fragment of the problem</p>
+</li>
+<li data-line="249"><p data-line="249"><strong>Theory-specific solvers</strong> reason about specific theories: numbers, memory, equality</p>
+</li>
+<li data-line="250"><p data-line="250"><strong>Learned explanations</strong> allow generalizing knowledge to learn from previous mistakes</p>
+</li>
+</ul>
+<div data-line="252" class="figure">
+<svg viewBox="0 0 1200 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="smt1-title smt1-desc">
+<title id="smt1-title">How Boolean search and theory reasoning cooperate</title>
+<desc id="smt1-desc">State 0: three boxes, Boolean search (CDCL), Theory reasoning, and a Learned clauses store under Boolean search. State 1: an arrow labelled assigned conditions goes from Boolean search to theory reasoning. State 2: a return arrow labelled consequences or conflicts comes back. State 3: a branch from the return path carries a conflict explanation into the learned-clause store, and a short arrow returns retained clauses to Boolean search.</desc>
+<defs>
+<marker id="smt1-navy" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f3a5f"/></marker>
+<marker id="smt1-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3b6ea5"/></marker>
+<marker id="smt1-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d0021b"/></marker>
+</defs>
+<rect x="40" y="30" width="360" height="110" rx="14" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="220" y="80" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Boolean search</text>
+<text x="220" y="114" text-anchor="middle" style="font-size:22px;fill:#1f3a5f">CDCL: decide, propagate, learn</text>
+<rect x="800" y="30" width="360" height="110" rx="14" fill="#3b6ea5" fill-opacity="0.08" stroke="#3b6ea5" stroke-width="3"/>
+<text x="980" y="80" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#3b6ea5">Theory reasoning</text>
+<text x="980" y="114" text-anchor="middle" style="font-size:22px;fill:#3b6ea5">numbers · memory · equality</text>
+<rect x="40" y="200" width="360" height="120" rx="14" fill="#ffffff" stroke="#1f3a5f" stroke-width="3" stroke-dasharray="10 6"/>
+<text x="220" y="242" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Learned clauses</text>
+<text x="220" y="274" text-anchor="middle" style="font-size:22px;fill:#5b5b5b">results of learning</text>
+<text x="220" y="302" text-anchor="middle" style="font-size:22px;fill:#5b5b5b">not every theory fact is stored</text>
+<g class="fragment" data-fragment-index="1">
+<path d="M404,62 L792,62" fill="none" stroke="#1f3a5f" stroke-width="4" marker-end="url(#smt1-navy)"/>
+<text x="600" y="48" text-anchor="middle" style="font-size:28px;fill:#1f3a5f">assigned conditions</text>
+<text x="600" y="92" text-anchor="middle" style="font-size:22px;fill:#5b5b5b">e.g. “<tspan style="font-style:italic">n</tspan> ≤ 64 holds”: a Boolean choice, not a value for <tspan style="font-style:italic">n</tspan></text>
+</g>
+<g class="fragment" data-fragment-index="2">
+<path d="M796,118 L408,118" fill="none" stroke="#3b6ea5" stroke-width="4" marker-end="url(#smt1-blue)"/>
+<text x="660" y="154" text-anchor="middle" style="font-size:28px;fill:#3b6ea5">consequences or conflicts</text>
+<text x="660" y="182" text-anchor="middle" style="font-size:22px;font-style:italic;fill:#5b5b5b">back and forth during the search</text>
+</g>
+<g class="fragment" data-fragment-index="3">
+<path d="M460,118 L460,260 L408,260" fill="none" stroke="#d0021b" stroke-width="4" marker-end="url(#smt1-red)"/>
+<text x="478" y="238" style="font-size:22px;fill:#d0021b">conflict explanation, kept as a clause</text>
+<path d="M220,200 L220,146" fill="none" stroke="#1f3a5f" stroke-width="4" marker-end="url(#smt1-navy)"/>
+<text x="236" y="180" style="font-size:22px;fill:#1f3a5f">retained clauses</text>
+</g>
+</svg>
+</div>
+<p data-line="291" class="source">Bjørner et al., <a href="https://z3prover.github.io/papers/z3internals.html">Z3 Internals</a>, §2.1.</p>
+<aside class="notes">
+<p data-line="294">Build with the arrow keys: (1) Boolean search hands the theory a set of assigned conditions. (2) The theory answers with consequences or a conflict. (3) A conflict explanation is kept in the learned-clause store and fed back into the search. The store holds results of learning; not every theory propagation becomes a stored clause immediately.</p>
+<p data-line="296">Introduce the Boolean engine as a search procedure that remembers why an attempt failed. CDCL means conflict-driven clause learning. A Boolean variable can stand for a whole condition such as n ≤ 64. Assigning that Boolean does not choose a value for n.</p>
+<p data-line="298">Many modern SMT engines combine CDCL with theory reasoning. DPLL(T) and CDCL are compatible descriptions at different levels. There are also specialized engines and reductions, including bit-blasting. Avoid suggesting every solver configuration has an identical architecture. The exchange is incremental, not a service called once after Boolean search has finished; the next slides show the interaction step by step.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="302">A theory-specific conflict can yield a <em>learned lemma</em></h2>
+<div data-line="304" class="figure">
+<svg viewBox="0 0 1200 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="smt2-title smt2-desc">
+<title id="smt2-title">One conflict, many avoided attempts</title>
+<desc id="smt2-desc">Atoms: a is n at most 64, b is n greater than 80, c is tag equals 7. Query: (a or c) and b. State 1: the trail records b = true, required by the query, and the number line shows n greater than 80 as an open interval to the right of 80. State 2: the trail adds a = true as a decision, and the number line shows n at most 64 as a closed interval to the left of 64. State 3: the gap between 64 and 80 is marked No overlap. State 4: the theory lemma not a or not b appears, with a and b highlighted as its premises; c is not involved.</desc>
+<defs>
+<marker id="smt2-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3b6ea5"/></marker>
+<marker id="smt2-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d0021b"/></marker>
+</defs>
+<text x="200" y="52" text-anchor="middle" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">a</tspan> : <tspan style="font-style:italic">n</tspan> ≤ 64</text>
+<text x="600" y="52" text-anchor="middle" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">b</tspan> : <tspan style="font-style:italic">n</tspan> &gt; 80</text>
+<text x="1000" y="52" text-anchor="middle" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">c</tspan> : <tspan style="font-style:italic">tag</tspan> = 7</text>
+<text x="600" y="100" text-anchor="middle" style="font-size:28px;fill:#1f3a5f">query: (<tspan style="font-style:italic">a</tspan> ∨ <tspan style="font-style:italic">c</tspan>) ∧ <tspan style="font-style:italic">b</tspan></text>
+<line x1="36" y1="124" x2="1164" y2="124" stroke="#e0e0e0" stroke-width="2"/>
+<text x="36" y="170" style="font-size:22px;fill:#8c8c8c">assignment trail</text>
+<line x1="36" y1="238" x2="500" y2="238" stroke="#e0e0e0" stroke-width="2"/>
+<line x1="36" y1="293" x2="500" y2="293" stroke="#e0e0e0" stroke-width="2"/>
+<line x1="36" y1="348" x2="500" y2="348" stroke="#e0e0e0" stroke-width="2"/>
+<g class="fragment" data-fragment-index="4">
+<rect x="36" y="196" width="464" height="40" rx="6" fill="#d0021b" fill-opacity="0.10"/>
+<rect x="36" y="251" width="464" height="40" rx="6" fill="#d0021b" fill-opacity="0.10"/>
+<text x="490" y="222" text-anchor="end" style="font-size:20px;fill:#d0021b">premise</text>
+<text x="490" y="277" text-anchor="end" style="font-size:20px;fill:#d0021b">premise</text>
+</g>
+<g class="fragment" data-fragment-index="1">
+<text x="60" y="222" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">b</tspan> = true</text>
+<text x="230" y="222" style="font-size:22px;fill:#8c8c8c">required by query</text>
+</g>
+<g class="fragment" data-fragment-index="2">
+<text x="60" y="277" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">a</tspan> = true</text>
+<text x="230" y="277" style="font-size:22px;fill:#8c8c8c">decision</text>
+</g>
+<text x="570" y="170" style="font-size:22px;fill:#8c8c8c">values of <tspan style="font-style:italic">n</tspan></text>
+<line x1="590" y1="300" x2="1150" y2="300" stroke="#8c8c8c" stroke-width="3"/>
+<line x1="640" y1="294" x2="640" y2="306" stroke="#b4b4b4" stroke-width="2"/>
+<text x="640" y="336" text-anchor="middle" style="font-size:20px;fill:#b4b4b4">48</text>
+<line x1="800" y1="290" x2="800" y2="310" stroke="#1f3a5f" stroke-width="3"/>
+<text x="800" y="338" text-anchor="middle" style="font-size:24px;font-weight:700;fill:#1f3a5f">64</text>
+<line x1="960" y1="290" x2="960" y2="310" stroke="#1f3a5f" stroke-width="3"/>
+<text x="960" y="338" text-anchor="middle" style="font-size:24px;font-weight:700;fill:#1f3a5f">80</text>
+<line x1="1120" y1="294" x2="1120" y2="306" stroke="#b4b4b4" stroke-width="2"/>
+<text x="1120" y="336" text-anchor="middle" style="font-size:20px;fill:#b4b4b4">96</text>
+<g class="fragment" data-fragment-index="1">
+<path d="M960,205 L1146,205" fill="none" stroke="#3b6ea5" stroke-width="6" marker-end="url(#smt2-blue)"/>
+<circle cx="960" cy="205" r="9" fill="#ffffff" stroke="#3b6ea5" stroke-width="4"/>
+<text x="1150" y="186" text-anchor="end" style="font-size:24px;fill:#3b6ea5"><tspan style="font-style:italic">b</tspan> : <tspan style="font-style:italic">n</tspan> &gt; 80</text>
+</g>
+<g class="fragment" data-fragment-index="2">
+<path d="M800,262 L604,262" fill="none" stroke="#3b6ea5" stroke-width="6" marker-end="url(#smt2-blue)"/>
+<circle cx="800" cy="262" r="9" fill="#3b6ea5"/>
+<text x="600" y="244" style="font-size:24px;fill:#3b6ea5"><tspan style="font-style:italic">a</tspan> : <tspan style="font-style:italic">n</tspan> ≤ 64</text>
+</g>
+<g class="fragment" data-fragment-index="3">
+<rect x="800" y="186" width="160" height="114" fill="#d0021b" fill-opacity="0.12"/>
+<line x1="800" y1="186" x2="800" y2="300" stroke="#d0021b" stroke-width="2" stroke-dasharray="6 5"/>
+<line x1="960" y1="186" x2="960" y2="300" stroke="#d0021b" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="880" y="172" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#d0021b">No overlap</text>
+<text x="880" y="240" text-anchor="middle" style="font-size:34px;font-weight:700;fill:#d0021b">✗</text>
+</g>
+<g class="fragment" data-fragment-index="4">
+<path d="M880,352 L880,392" fill="none" stroke="#d0021b" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#smt2-red)"/>
+<rect x="36" y="398" width="1128" height="84" rx="12" fill="#ffffff" stroke="#d0021b" stroke-width="3"/>
+<text x="64" y="448" style="font-size:22px;fill:#8c8c8c">theory lemma</text>
+<text x="600" y="442" text-anchor="middle" style="font-size:34px;font-weight:700;fill:#d0021b">¬<tspan style="font-style:italic">a</tspan> ∨ ¬<tspan style="font-style:italic">b</tspan></text>
+<text x="600" y="472" text-anchor="middle" style="font-size:22px;fill:#5b5b5b">These two conditions cannot both hold</text>
+<text x="1136" y="448" text-anchor="end" style="font-size:22px;fill:#8c8c8c">Learned lemma, add to database</text>
+</g>
+</svg>
+</div>
+<p data-line="373" class="source">Barbosa et al., <a href="https://theory.stanford.edu/~barrett/pubs/BBB%2B22.pdf">cvc5</a>, §2.1.</p>
+<aside class="notes">
+<p data-line="376">Build with the arrow keys: (1) b = true is required by the query; the interval n &gt; 80 appears, open at 80. (2) The search decides a = true; the interval n ≤ 64 appears, closed at 64. (3) The two intervals do not overlap: no integer satisfies both. (4) Arithmetic explains the conflict as the lemma ¬a ∨ ¬b; a and b are its premises, c is not involved. The axis is a viewing window, not an additional bound.</p>
+<p data-line="378">Use mathematical integers for n and tag. This example has no wraparound. It illustrates a solver query, not a complete vulnerability or a claim that a particular program is insecure.</p>
+<p data-line="380">The query requires n &gt; 80 and at least one of n ≤ 64 or tag = 7. At the Boolean level, setting both a and b to true satisfies the query regardless of c. Arithmetic recognizes that no integer can satisfy those two length constraints together.</p>
+<p data-line="382">The theory-valid clause ¬a ∨ ¬b states that the two conditions cannot both hold. It excludes every assignment containing that inconsistent pair. It is stronger than merely rejecting one complete Boolean assignment. The explanation need not be a minimum inconsistent subset.</p>
+<p data-line="384">For an expert audience: distinguish this theory lemma from the clause CDCL ultimately learns. Here b is a root-level fact. Resolving ¬a ∨ ¬b with b yields ¬a. The next slide shows both steps. Retaining the theory lemma is a valid teaching presentation, but actual implementations may materialize reasons lazily and retain a different learned clause.</p>
+</aside>
+</section>
+<section>
+<section>
+<h2 data-line="388">The solver's inner loop</h2>
+<div data-line="390" class="figure">
+<svg viewBox="0 0 1200 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="smt3-title smt3-desc">
+<title id="smt3-title">The CDCL(T) loop, continuing the example</title>
+<desc id="smt3-desc">Left: a loop. Choose feeds a decision into Propagate. From Propagate, a conflict leads to Explain and learn, then Backtrack, then back to Propagate; a root conflict exits to UNSAT. A candidate leads to Final theory checks; passing checks reach SAT; new lemmas return to Propagate. Right: the example. State 1: theory lemma not a or not b. State 2: resolving it with b gives the learned clause not a. State 3: the decision a = true is undone. State 4: a = false is propagated from the learned clause, then c = true from a or c. State 5: candidate values n = 81, tag = 7, not yet checked. State 6: the checks pass and the result is SAT.</desc>
+<defs>
+<marker id="smt3-navy" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f3a5f"/></marker>
+<marker id="smt3-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3b6ea5"/></marker>
+<marker id="smt3-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d0021b"/></marker>
+<marker id="smt3-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2e8b57"/></marker>
+</defs>
+<rect x="270" y="26" width="180" height="64" rx="12" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="360" y="56" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Choose</text>
+<text x="360" y="81" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">make a decision</text>
+<rect x="250" y="160" width="220" height="64" rx="12" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="360" y="190" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Propagate</text>
+<text x="360" y="215" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">forced consequences</text>
+<rect x="10" y="290" width="250" height="64" rx="12" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="135" y="320" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Explain and learn</text>
+<text x="135" y="345" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">remember why it failed</text>
+<rect x="460" y="290" width="280" height="64" rx="12" fill="#3b6ea5" fill-opacity="0.08" stroke="#3b6ea5" stroke-width="3"/>
+<text x="600" y="320" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#3b6ea5">Final theory checks</text>
+<text x="600" y="345" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">check the candidate model</text>
+<rect x="270" y="410" width="180" height="64" rx="12" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="360" y="440" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Backtrack</text>
+<text x="360" y="465" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">undo failed choices</text>
+<rect x="530" y="410" width="140" height="64" rx="12" fill="#ffffff" stroke="#2e8b57" stroke-width="3"/>
+<text x="600" y="452" text-anchor="middle" style="font-size:30px;font-weight:700;fill:#2e8b57">SAT</text>
+<rect x="75" y="418" width="120" height="48" rx="10" fill="#ffffff" stroke="#d0021b" stroke-width="2.5"/>
+<text x="135" y="450" text-anchor="middle" style="font-size:24px;font-weight:700;fill:#d0021b">UNSAT</text>
+<path d="M320,90 L320,156" fill="none" stroke="#1f3a5f" stroke-width="3" marker-end="url(#smt3-navy)"/>
+<text x="308" y="128" text-anchor="end" style="font-size:20px;fill:#5b5b5b">decision</text>
+<path d="M400,160 L400,94" fill="none" stroke="#1f3a5f" stroke-width="3" marker-end="url(#smt3-navy)"/>
+<text x="412" y="128" style="font-size:20px;fill:#5b5b5b">choose again</text>
+<path d="M250,192 L135,192 L135,286" fill="none" stroke="#d0021b" stroke-width="3" marker-end="url(#smt3-red)"/>
+<text x="190" y="180" text-anchor="middle" style="font-size:22px;font-weight:700;fill:#d0021b">conflict</text>
+<path d="M470,192 L600,192 L600,286" fill="none" stroke="#3b6ea5" stroke-width="3" marker-end="url(#smt3-blue)"/>
+<text x="535" y="180" text-anchor="middle" style="font-size:22px;font-weight:700;fill:#3b6ea5">candidate</text>
+<path d="M260,330 L300,330 L300,406" fill="none" stroke="#1f3a5f" stroke-width="3" marker-end="url(#smt3-navy)"/>
+<path d="M360,410 L360,228" fill="none" stroke="#1f3a5f" stroke-width="3" marker-end="url(#smt3-navy)"/>
+<path d="M460,300 L420,300 L420,228" fill="none" stroke="#3b6ea5" stroke-width="3" marker-end="url(#smt3-blue)"/>
+<text x="432" y="282" style="font-size:20px;fill:#3b6ea5">new lemmas</text>
+<path d="M135,354 L135,414" fill="none" stroke="#d0021b" stroke-width="2.5" marker-end="url(#smt3-red)"/>
+<text x="147" y="392" style="font-size:20px;fill:#d0021b">root conflict</text>
+<path d="M600,354 L600,406" fill="none" stroke="#2e8b57" stroke-width="3" marker-end="url(#smt3-green)"/>
+<text x="612" y="388" style="font-size:20px;fill:#2e8b57">checks pass</text>
+<g class="fragment fade-in-then-out" data-fragment-index="1"><rect x="4" y="284" width="262" height="76" rx="14" fill="none" stroke="#f76900" stroke-width="5"/></g>
+<g class="fragment fade-in-then-out" data-fragment-index="2"><rect x="4" y="284" width="262" height="76" rx="14" fill="none" stroke="#f76900" stroke-width="5"/></g>
+<g class="fragment fade-in-then-out" data-fragment-index="3"><rect x="264" y="404" width="192" height="76" rx="14" fill="none" stroke="#f76900" stroke-width="5"/></g>
+<g class="fragment fade-in-then-out" data-fragment-index="4"><rect x="244" y="154" width="232" height="76" rx="14" fill="none" stroke="#f76900" stroke-width="5"/></g>
+<g class="fragment fade-in-then-out" data-fragment-index="5"><rect x="454" y="284" width="292" height="76" rx="14" fill="none" stroke="#f76900" stroke-width="5"/></g>
+<g class="fragment" data-fragment-index="6"><rect x="530" y="410" width="140" height="64" rx="12" fill="#2e8b57"/><text x="600" y="452" text-anchor="middle" style="font-size:30px;font-weight:700;fill:#ffffff">SAT</text></g>
+<line x1="750" y1="20" x2="750" y2="490" stroke="#e0e0e0" stroke-width="2"/>
+<text x="770" y="44" style="font-size:22px;fill:#8c8c8c">the example, right after the conflict</text>
+<line x1="770" y1="110" x2="1190" y2="110" stroke="#e0e0e0" stroke-width="2"/>
+<line x1="770" y1="166" x2="1190" y2="166" stroke="#e0e0e0" stroke-width="2"/>
+<line x1="770" y1="222" x2="1190" y2="222" stroke="#e0e0e0" stroke-width="2"/>
+<text x="770" y="94" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">b</tspan> = true</text>
+<text x="905" y="94" style="font-size:22px;fill:#3b6ea5"><tspan style="font-style:italic">n</tspan> &gt; 80</text>
+<text x="1020" y="84" style="font-size:20px;fill:#8c8c8c">required by query</text>
+<g class="fragment" data-fragment-index="2"><text x="1020" y="104" style="font-size:18px;font-style:italic;fill:#8c8c8c">level 0</text></g>
+<g class="fragment fade-out" data-fragment-index="3">
+<text x="770" y="150" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">a</tspan> = true</text>
+<text x="905" y="150" style="font-size:22px;fill:#3b6ea5"><tspan style="font-style:italic">n</tspan> ≤ 64</text>
+<text x="1020" y="140" style="font-size:20px;fill:#8c8c8c">decision</text>
+<g class="fragment" data-fragment-index="2"><text x="1020" y="160" style="font-size:18px;font-style:italic;fill:#8c8c8c">level 1</text></g>
+</g>
+<g class="fragment" data-fragment-index="4">
+<text x="770" y="150" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">a</tspan> = false</text>
+<text x="905" y="150" style="font-size:22px;fill:#3b6ea5"><tspan style="font-style:italic">n</tspan> &gt; 64</text>
+<text x="1020" y="140" style="font-size:20px;fill:#8c8c8c">learned clause</text>
+<text x="770" y="206" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">c</tspan> = true</text>
+<text x="905" y="206" style="font-size:22px;fill:#3b6ea5"><tspan style="font-style:italic">tag</tspan> = 7</text>
+<text x="1020" y="196" style="font-size:20px;fill:#8c8c8c">from <tspan style="font-style:italic">a</tspan> ∨ <tspan style="font-style:italic">c</tspan></text>
+</g>
+<g class="fragment" data-fragment-index="1">
+<text x="770" y="268" style="font-size:20px;fill:#8c8c8c">theory lemma</text>
+<text x="905" y="268" style="font-size:28px;fill:#d0021b">¬<tspan style="font-style:italic">a</tspan> ∨ ¬<tspan style="font-style:italic">b</tspan></text>
+</g>
+<g class="fragment" data-fragment-index="2">
+<text x="770" y="318" style="font-size:20px;fill:#8c8c8c">learned clause</text>
+<text x="905" y="318" style="font-size:28px;fill:#1f3a5f">¬<tspan style="font-style:italic">a</tspan></text>
+<text x="960" y="318" style="font-size:20px;fill:#8c8c8c">resolve the lemma with <tspan style="font-style:italic">b</tspan></text>
+</g>
+<g class="fragment fade-in-then-out" data-fragment-index="5">
+<text x="980" y="386" text-anchor="middle" style="font-size:28px;fill:#8c8c8c"><tspan style="font-style:italic">n</tspan> = 81, <tspan style="font-style:italic">tag</tspan> = 7</text>
+<text x="980" y="412" text-anchor="middle" style="font-size:20px;fill:#8c8c8c">candidate values, not yet checked</text>
+</g>
+<g class="fragment" data-fragment-index="6">
+<text x="980" y="386" text-anchor="middle" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">n</tspan> = 81, <tspan style="font-style:italic">tag</tspan> = 7</text>
+<text x="980" y="412" text-anchor="middle" style="font-size:20px;fill:#2e8b57">one satisfying input (many exist)</text>
+<text x="980" y="448" text-anchor="middle" style="font-size:22px;fill:#2e8b57"><tspan style="font-style:italic">b</tspan>: 81 &gt; 80 ✓&#160;&#160;&#160;<tspan style="font-style:italic">c</tspan>: <tspan style="font-style:italic">tag</tspan> = 7 ✓</text>
+<text x="980" y="490" text-anchor="middle" style="font-size:34px;font-weight:700;fill:#2e8b57">SAT</text>
+</g>
+<text x="10" y="496" style="font-size:18px;fill:#8c8c8c">↓ optional: earlier theory propagation</text>
+</svg>
+</div>
+<p data-line="487" class="source">Barbosa et al., <a href="https://theory.stanford.edu/~barrett/pubs/BBB%2B22.pdf">cvc5</a>, §2.1; <a href="https://github.com/cvc5/cvc5/blob/main/src/theory/theory.h">theory interface</a>.</p>
+<aside class="notes">
+<p data-line="490">Build with the arrow keys: (1) the theory lemma ¬a ∨ ¬b. (2) Resolving it with b gives the learned clause ¬a; the optional level tags show b at level 0 and a at level 1. (3) Backtrack: the decision a = true and its theory assumption go away; b and the learned clause stay. (4) Propagate ¬a from the learned clause, then c from a ∨ c. (5) The candidate n = 81, tag = 7 goes to the final theory checks. (6) The checks pass: SAT, one satisfying input among many. Press down for the optional branch where arithmetic propagates ¬a before any decision is made.</p>
+<p data-line="492">Continue from the previous slide. Since b holds at decision level zero, conflict analysis can derive the unit clause ¬a. Backtrack to level zero, undo the decision a, and propagate ¬a. The original clause a ∨ c then forces c. Only after the theory checks succeed does the figure present n = 81, tag = 7 as an example model.</p>
+<p data-line="494">Define propagation as drawing a forced conclusion and a decision as making a choice. Backjumping can skip irrelevant decisions. This small example has just one decision, so it does not visually demonstrate skipping multiple levels.</p>
+<p data-line="496">The solver repeatedly alternates Boolean propagation with scheduled theory work. It need not run every expensive theory procedure after each assignment. Lightweight checks operate on partial assignments. Stronger checks can generate more lemmas when a candidate model is available. A Boolean satisfying assignment alone is insufficient for an SMT SAT result. Resource limits or incomplete procedures may produce unknown.</p>
+<p data-line="498">For an expert audience: a propagated literal has a reason that conflict analysis can request. Theory state must track backtracking correctly. Learned clauses survive search backtracking when valid in the retained assertion context. Search backtracking is distinct from an application's push/pop of assertions. Restarts and clause deletion are additional policies, omitted from the drawing for clarity. The loop is schematic, not an exact call graph: final checking, propagation, and decision heuristics do not run in one universal fixed order across solvers.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="502">Optional: earlier theory propagation</h2>
+<div data-line="504" class="figure">
+<svg viewBox="0 0 1200 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="smt3b-title smt3b-desc">
+<title id="smt3b-title">The same example with early theory propagation</title>
+<desc id="smt3b-desc">The same loop drawing. Right: the example replayed from b alone. State 1: arithmetic propagates a = false, with the lemma not a or not b as its explanation. State 2: Boolean propagation derives c = true from a or c. State 3: candidate values n = 81, tag = 7, not yet checked. State 4: the checks pass and the result is SAT. No decision was made and no conflict occurred.</desc>
+<defs>
+<marker id="smt3b-navy" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f3a5f"/></marker>
+<marker id="smt3b-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3b6ea5"/></marker>
+<marker id="smt3b-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d0021b"/></marker>
+<marker id="smt3b-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2e8b57"/></marker>
+</defs>
+<rect x="270" y="26" width="180" height="64" rx="12" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="360" y="56" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Choose</text>
+<text x="360" y="81" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">make a decision</text>
+<rect x="250" y="160" width="220" height="64" rx="12" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="360" y="190" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Propagate</text>
+<text x="360" y="215" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">forced consequences</text>
+<rect x="10" y="290" width="250" height="64" rx="12" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="135" y="320" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Explain and learn</text>
+<text x="135" y="345" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">remember why it failed</text>
+<rect x="460" y="290" width="280" height="64" rx="12" fill="#3b6ea5" fill-opacity="0.08" stroke="#3b6ea5" stroke-width="3"/>
+<text x="600" y="320" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#3b6ea5">Final theory checks</text>
+<text x="600" y="345" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">check the candidate model</text>
+<rect x="270" y="410" width="180" height="64" rx="12" fill="#1f3a5f" fill-opacity="0.08" stroke="#1f3a5f" stroke-width="3"/>
+<text x="360" y="440" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#1f3a5f">Backtrack</text>
+<text x="360" y="465" text-anchor="middle" style="font-size:20px;fill:#5b5b5b">undo failed choices</text>
+<rect x="530" y="410" width="140" height="64" rx="12" fill="#ffffff" stroke="#2e8b57" stroke-width="3"/>
+<text x="600" y="452" text-anchor="middle" style="font-size:30px;font-weight:700;fill:#2e8b57">SAT</text>
+<rect x="75" y="418" width="120" height="48" rx="10" fill="#ffffff" stroke="#d0021b" stroke-width="2.5"/>
+<text x="135" y="450" text-anchor="middle" style="font-size:24px;font-weight:700;fill:#d0021b">UNSAT</text>
+<path d="M320,90 L320,156" fill="none" stroke="#1f3a5f" stroke-width="3" marker-end="url(#smt3b-navy)"/>
+<text x="308" y="128" text-anchor="end" style="font-size:20px;fill:#5b5b5b">decision</text>
+<path d="M400,160 L400,94" fill="none" stroke="#1f3a5f" stroke-width="3" marker-end="url(#smt3b-navy)"/>
+<text x="412" y="128" style="font-size:20px;fill:#5b5b5b">choose again</text>
+<path d="M250,192 L135,192 L135,286" fill="none" stroke="#d0021b" stroke-width="3" marker-end="url(#smt3b-red)"/>
+<text x="190" y="180" text-anchor="middle" style="font-size:22px;font-weight:700;fill:#d0021b">conflict</text>
+<path d="M470,192 L600,192 L600,286" fill="none" stroke="#3b6ea5" stroke-width="3" marker-end="url(#smt3b-blue)"/>
+<text x="535" y="180" text-anchor="middle" style="font-size:22px;font-weight:700;fill:#3b6ea5">candidate</text>
+<path d="M260,330 L300,330 L300,406" fill="none" stroke="#1f3a5f" stroke-width="3" marker-end="url(#smt3b-navy)"/>
+<path d="M360,410 L360,228" fill="none" stroke="#1f3a5f" stroke-width="3" marker-end="url(#smt3b-navy)"/>
+<path d="M460,300 L420,300 L420,228" fill="none" stroke="#3b6ea5" stroke-width="3" marker-end="url(#smt3b-blue)"/>
+<text x="432" y="282" style="font-size:20px;fill:#3b6ea5">new lemmas</text>
+<path d="M135,354 L135,414" fill="none" stroke="#d0021b" stroke-width="2.5" marker-end="url(#smt3b-red)"/>
+<text x="147" y="392" style="font-size:20px;fill:#d0021b">root conflict</text>
+<path d="M600,354 L600,406" fill="none" stroke="#2e8b57" stroke-width="3" marker-end="url(#smt3b-green)"/>
+<text x="612" y="388" style="font-size:20px;fill:#2e8b57">checks pass</text>
+<g class="fragment fade-in-then-out" data-fragment-index="1"><rect x="244" y="154" width="232" height="76" rx="14" fill="none" stroke="#f76900" stroke-width="5"/></g>
+<g class="fragment fade-in-then-out" data-fragment-index="2"><rect x="244" y="154" width="232" height="76" rx="14" fill="none" stroke="#f76900" stroke-width="5"/></g>
+<g class="fragment fade-in-then-out" data-fragment-index="3"><rect x="454" y="284" width="292" height="76" rx="14" fill="none" stroke="#f76900" stroke-width="5"/></g>
+<g class="fragment" data-fragment-index="4"><rect x="530" y="410" width="140" height="64" rx="12" fill="#2e8b57"/><text x="600" y="452" text-anchor="middle" style="font-size:30px;font-weight:700;fill:#ffffff">SAT</text></g>
+<line x1="750" y1="20" x2="750" y2="490" stroke="#e0e0e0" stroke-width="2"/>
+<text x="770" y="44" style="font-size:22px;fill:#8c8c8c">the same query, from <tspan style="font-style:italic">b</tspan> alone</text>
+<line x1="770" y1="110" x2="1190" y2="110" stroke="#e0e0e0" stroke-width="2"/>
+<line x1="770" y1="166" x2="1190" y2="166" stroke="#e0e0e0" stroke-width="2"/>
+<line x1="770" y1="222" x2="1190" y2="222" stroke="#e0e0e0" stroke-width="2"/>
+<text x="770" y="94" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">b</tspan> = true</text>
+<text x="905" y="94" style="font-size:22px;fill:#3b6ea5"><tspan style="font-style:italic">n</tspan> &gt; 80</text>
+<text x="1020" y="84" style="font-size:20px;fill:#8c8c8c">required by query</text>
+<g class="fragment" data-fragment-index="1">
+<text x="770" y="150" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">a</tspan> = false</text>
+<text x="905" y="150" style="font-size:22px;fill:#3b6ea5"><tspan style="font-style:italic">n</tspan> &gt; 64</text>
+<text x="1020" y="140" style="font-size:20px;fill:#8c8c8c">theory propagation</text>
+<text x="770" y="268" style="font-size:20px;fill:#8c8c8c">explanation, on request</text>
+<text x="1020" y="268" style="font-size:28px;fill:#d0021b">¬<tspan style="font-style:italic">a</tspan> ∨ ¬<tspan style="font-style:italic">b</tspan></text>
+</g>
+<g class="fragment" data-fragment-index="2">
+<text x="770" y="206" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">c</tspan> = true</text>
+<text x="905" y="206" style="font-size:22px;fill:#3b6ea5"><tspan style="font-style:italic">tag</tspan> = 7</text>
+<text x="1020" y="196" style="font-size:20px;fill:#8c8c8c">from <tspan style="font-style:italic">a</tspan> ∨ <tspan style="font-style:italic">c</tspan></text>
+<text x="770" y="318" style="font-size:20px;fill:#5b5b5b">no decision, no conflict, nothing to undo</text>
+</g>
+<g class="fragment fade-in-then-out" data-fragment-index="3">
+<text x="980" y="386" text-anchor="middle" style="font-size:28px;fill:#8c8c8c"><tspan style="font-style:italic">n</tspan> = 81, <tspan style="font-style:italic">tag</tspan> = 7</text>
+<text x="980" y="412" text-anchor="middle" style="font-size:20px;fill:#8c8c8c">candidate values, not yet checked</text>
+</g>
+<g class="fragment" data-fragment-index="4">
+<text x="980" y="386" text-anchor="middle" style="font-size:28px;fill:#1f3a5f"><tspan style="font-style:italic">n</tspan> = 81, <tspan style="font-style:italic">tag</tspan> = 7</text>
+<text x="980" y="412" text-anchor="middle" style="font-size:20px;fill:#2e8b57">one satisfying input (many exist)</text>
+<text x="980" y="448" text-anchor="middle" style="font-size:22px;fill:#2e8b57"><tspan style="font-style:italic">b</tspan>: 81 &gt; 80 ✓&#160;&#160;&#160;<tspan style="font-style:italic">c</tspan>: <tspan style="font-style:italic">tag</tspan> = 7 ✓</text>
+<text x="980" y="490" text-anchor="middle" style="font-size:34px;font-weight:700;fill:#2e8b57">SAT</text>
+</g>
+<text x="10" y="496" style="font-size:18px;fill:#8c8c8c">↑ back to the conflict-driven trace</text>
+</svg>
+</div>
+<blockquote data-line="588"><p data-line="588"><strong>Implementation detail:</strong> The conflict-driven trace on the previous slide is one illustrative schedule. A real solver may detect this consequence earlier.</p>
+</blockquote>
+<p data-line="590" class="source">Barbosa et al., <a href="https://theory.stanford.edu/~barrett/pubs/BBB%2B22.pdf">cvc5</a>, §2.1; <a href="https://github.com/cvc5/cvc5/blob/main/src/theory/theory.h">theory interface</a>.</p>
+<aside class="notes">
+<p data-line="593">Optional branch. Build with the arrow keys: (1) with only b asserted, arithmetic already sees that n &gt; 80 rules out n ≤ 64 and propagates ¬a; if conflict analysis ever asks why, the explanation is the same lemma ¬a ∨ ¬b. (2) Boolean propagation derives c from a ∨ c. No decision was made, so there is nothing to undo. (3) The candidate goes to the final theory checks. (4) SAT, same model as before.</p>
+<p data-line="595">The default conflict trace on the previous slide is an illustrative schedule. Whether a solver propagates this consequence early or discovers it through a conflict depends on how much theory work it schedules on partial assignments.</p>
+</aside>
+</section>
+</section>
+<section>
+<h2 data-line="599">The solver's wall-clock time depends on workload</h2>
+<ul>
+<li data-line="601">Changing the way we send formulas to SMT can <em>radically</em> change its performance!</li>
+</ul>
+<table data-line="603"><thead><tr><th>Workload</th><th>Work that can dominate</th></tr></thead><tbody>
+<tr><td>Bit-vectors</td><td>Building Boolean circuits and searching them</td></tr>
+<tr><td>Equality</td><td>Maintaining which terms must be equal</td></tr>
+<tr><td>Arithmetic</td><td>Updating bounds and solving numerical constraints</td></tr>
+<tr><td>Quantifiers</td><td>Generating and checking formula instances</td></tr>
+</tbody></table>
+<p data-line="611" class="source"><a href="https://theory.stanford.edu/~nikolaj/z3navigate.html">Navigating the Universe of Z3 Theory Solvers</a>; Fazekas et al., <a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.SAT.2023.8">IPASIR-UP</a>, SAT 2023.</p>
+<aside class="notes">
+<p data-line="614">Do not attach percentages or rank these rows. This is a map of possible costs, not a benchmark result. Boolean unit propagation is an important hot path in SAT-heavy workloads, but it does not universally dominate SMT time. Preprocessing, bit-blasting, theory reasoning, and model construction can change the picture. Measure elapsed time separately from counts of conflicts, decisions, and propagations.</p>
+<p data-line="616">For specialists, connect the plain-language rows to concrete mechanisms: watched literals and clause access on the SAT side; congruence closure with explanations for equality; simplex-style feasibility maintenance for linear real arithmetic; branching and cuts for integers; and matching or model-guided instantiation for quantifiers. These are examples, not a complete algorithm taxonomy.</p>
+<p data-line="618">For a learning project, quantifier-free equality with uninterpreted functions is a useful starting point. The interesting implementation issues are incremental congruence closure, undoing merges, and explaining a conflict to CDCL. For a small tool focused on machine arithmetic, a restricted bit-vector language can instead compile to SAT. Arrays and mixed theories introduce additional work.</p>
+<p data-line="620">IPASIR-UP provides a concrete example of integrating external reasoning with an existing CDCL engine. Its paper demonstrates CaDiCaL integration with cvc5. Cite this as an implementation option, without implying that all versions or configurations of cvc5 use one particular SAT backend.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="624">From concrete execution to symbolic execution</h2>
+<div data-line="626" class="two-col">
+<div class="col-left">
+<p data-line="629"><strong>Concrete execution</strong></p>
+<pre data-line="631"><code class="text">input = "AAAA"
+x = 0x41414141
+branch: x == 0xdeadbeef  // false
+</code></pre>
+<p data-line="637">One run. One answer.</p>
+</div>
+<div class="col-right">
+<p data-line="642"><strong>Symbolic execution</strong></p>
+<pre data-line="644"><code class="text">input = α0 α1 α2 α3
+x = concat(α0, α1, α2, α3)
+branch condition: x == 0xdeadbeef
+</code></pre>
+<p data-line="650">A set of inputs at once.</p>
+</div>
+</div>
+<p data-line="655">Now the question is not "what happened on this run?" It is: <strong>is there any input that makes the branch go the other way?</strong></p>
+<p data-line="657" class="source">Classic system: Cadar, Dunbar, and Engler, "KLEE," OSDI 2008.</p>
+<aside class="notes">
+<p data-line="660">This is the conceptual bridge from fuzzing to symbolic execution. Fuzzing tries many concrete inputs. Symbolic execution reasons about a set of inputs at once.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="664">Path conditions</h2>
+<p data-line="666">A <strong>path condition</strong> is the conjunction of branch decisions needed to reach a program point.</p>
+<pre data-line="668"><code class="c">if (n &lt; 64) {
+  if (tag == 0x1337) {
+    sink(buf[n + 8]);
+  }
+}
+</code></pre>
+<p data-line="676">Path to <code>sink</code>:</p>
+<p data-line="678"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>n</mtext><mo>&lt;</mo><mn>64</mn><mo>∧</mo><mtext>tag</mtext><mo>=</mo><mn>0</mn><mi>x</mi><mn>1337</mn></mrow><annotation encoding="application/x-tex">
+\text{n} &lt; 64 \land \text{tag} = 0x1337
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord text"><span class="mord">n</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">64</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8095em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">tag</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span><span class="mord mathnormal">x</span><span class="mord">1337</span></span></span></span></span></p>
+<p data-line="682">Potential out-of-bounds query:</p>
+<p data-line="684"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>n</mtext><mo>&lt;</mo><mn>64</mn><mo>∧</mo><mtext>tag</mtext><mo>=</mo><mn>0</mn><mi>x</mi><mn>1337</mn><mo>∧</mo><mtext>n</mtext><mo>+</mo><mn>8</mn><mo>≥</mo><mi mathvariant="normal">∣</mi><mtext>buf</mtext><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">
+\text{n} &lt; 64 \land \text{tag} = 0x1337 \land \text{n} + 8 \ge |\text{buf}|
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5782em;vertical-align:-0.0391em;"></span><span class="mord text"><span class="mord">n</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">64</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8095em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">tag</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span><span class="mord mathnormal">x</span><span class="mord">1337</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">n</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7804em;vertical-align:-0.136em;"></span><span class="mord">8</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∣</span><span class="mord text"><span class="mord">buf</span></span><span class="mord">∣</span></span></span></span></span></p>
+<aside class="notes">
+<p data-line="689">This is examinable. Students should be able to write a path condition and then add a safety-violation condition.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="693">Figure: building a path condition</h2>
+<div data-line="695" class="figure">
+<svg viewBox="0 0 1200 470" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="pe-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9a9a9a"/></marker>
+<marker id="pe-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f76900"/></marker>
+</defs>
+<text class="fig-small" x="190" y="28" text-anchor="middle">program</text>
+<text class="fig-small" x="600" y="28" text-anchor="middle">execution tree</text>
+<text class="fig-small" x="1000" y="28" text-anchor="middle">query</text>
+<rect class="fig-box ctx" x="20" y="44" width="340" height="220" rx="14"/>
+<g class="fragment" data-fragment-index="1"><rect x="30" y="64" width="320" height="34" rx="6" fill="#f76900" opacity="0.25"/></g>
+<g class="fragment" data-fragment-index="2"><rect x="30" y="104" width="320" height="34" rx="6" fill="#f76900" opacity="0.25"/></g>
+<g class="fragment" data-fragment-index="3"><rect x="30" y="144" width="320" height="34" rx="6" fill="#d0021b" opacity="0.2"/></g>
+<text class="fig-mono fig-small" x="40" y="88">if (n &lt; 64) {</text>
+<text class="fig-mono fig-small" x="64" y="128">if (tag == 0x1337) {</text>
+<text class="fig-mono fig-small" x="88" y="168">sink(buf[n + 8]);</text>
+<text class="fig-mono fig-small" x="64" y="208">}</text>
+<text class="fig-mono fig-small" x="40" y="248">}</text>
+<rect class="fig-box" x="545" y="60" width="150" height="44" rx="10"/>
+<text class="fig-small" x="620" y="89" text-anchor="middle">n &lt; 64 ?</text>
+<rect class="fig-box ctx" x="400" y="180" width="80" height="40" rx="10"/>
+<text class="fig-small" x="440" y="206" text-anchor="middle">exit</text>
+<rect class="fig-box" x="500" y="180" width="240" height="44" rx="10"/>
+<text class="fig-small" x="620" y="209" text-anchor="middle">tag == 0x1337 ?</text>
+<rect class="fig-box ctx" x="400" y="300" width="80" height="40" rx="10"/>
+<text class="fig-small" x="440" y="326" text-anchor="middle">exit</text>
+<rect class="fig-box" x="500" y="300" width="240" height="44" rx="10"/>
+<text class="fig-mono fig-small" x="620" y="329" text-anchor="middle">sink(buf[n+8])</text>
+<path d="M575,104 L455,180" stroke="#9a9a9a" stroke-width="3" fill="none" marker-end="url(#pe-gray)"/>
+<text class="fig-small" x="485" y="135">F</text>
+<path d="M620,104 L620,180" stroke="#9a9a9a" stroke-width="3" fill="none" marker-end="url(#pe-gray)"/>
+<text class="fig-small" x="634" y="148">T</text>
+<path d="M575,224 L455,300" stroke="#9a9a9a" stroke-width="3" fill="none" marker-end="url(#pe-gray)"/>
+<text class="fig-small" x="485" y="255">F</text>
+<path d="M620,224 L620,300" stroke="#9a9a9a" stroke-width="3" fill="none" marker-end="url(#pe-gray)"/>
+<text class="fig-small" x="634" y="268">T</text>
+<g class="fragment" data-fragment-index="1"><path d="M620,104 L620,180" stroke="#f76900" stroke-width="6" fill="none" marker-end="url(#pe-orange)"/></g>
+<g class="fragment" data-fragment-index="2"><path d="M620,224 L620,300" stroke="#f76900" stroke-width="6" fill="none" marker-end="url(#pe-orange)"/></g>
+<g class="fragment" data-fragment-index="3"><rect x="496" y="296" width="248" height="52" rx="12" fill="none" stroke="#d0021b" stroke-width="4"/></g>
+<rect class="fig-box" x="820" y="44" width="360" height="400" rx="14"/>
+<text class="fig-small" x="840" y="84">path condition</text>
+<g class="fragment" data-fragment-index="1"><text class="fig-mono fig-small" x="840" y="126">n &lt; 64</text></g>
+<g class="fragment" data-fragment-index="2"><text class="fig-mono fig-small" x="840" y="164">∧ tag = 0x1337</text></g>
+<g class="fragment" data-fragment-index="3"><text class="fig-mono fig-small fig-danger" x="840" y="202">∧ n + 8 ≥ 64</text><text class="fig-small fig-danger" x="840" y="232">← bug condition, |buf| = 64</text></g>
+<g class="fragment" data-fragment-index="4"><rect x="840" y="256" width="320" height="64" rx="10" fill="#2e8b57" opacity="0.15"/><rect x="840" y="256" width="320" height="64" rx="10" fill="none" stroke="#2e8b57" stroke-width="3"/><text class="fig-mono fig-small" x="856" y="282">sat</text><text class="fig-mono fig-small" x="856" y="308">n = 56, tag = 0x1337</text></g>
+<g class="fragment" data-fragment-index="5"><text class="fig-small" x="840" y="366">with n + 8 ≥ 1000 instead:</text><text class="fig-mono fig-small fig-danger" x="840" y="400">unsat</text><text class="fig-small" x="840" y="428">no input satisfies the query</text></g>
+</svg>
+</div>
+<aside class="notes">
+<p data-line="745">Step through with the arrow keys: (1) choose n &lt; 64, (2) choose tag == 0x1337, (3) add the bug condition n + 8 &gt;= 64, (4) solve: sat, n = 56, tag = 0x1337, (5) swap in n + 8 &gt;= 1000: unsat.</p>
+<p data-line="747">Pedagogical behavior: students should see that the solver is not "finding bugs" by magic. It answers the precise query we formulate.</p>
+<p data-line="749">FIGURE SPEC — "SMT Path Explorer" (full interactive version)</p>
+<p data-line="751">Make a 16:9 SVG/HTML interactive figure with three zones.</p>
+<p data-line="753">Left zone: code snippet with three branch lines. Highlight the currently selected line.</p>
+<p data-line="755">Middle zone: binary path tree. Each click on a branch edge appends either the true or false constraint to the path condition. Edges already chosen turn Syracuse orange. Unchosen edges stay gray.</p>
+<p data-line="757">Right zone: live formula panel. Each selected branch appends a line. A final toggle named "add vulnerability condition" appends <code>n + 8 &gt;= 64</code>. A "solve" button animates a model card: <code>sat; n=56; tag=0x1337</code>.</p>
+<p data-line="759">Implementation details: deterministic, no network, no external solver. Hard-code the satisfying model and an <code>unsat</code> response for an alternative condition such as <code>n &lt; 64 ∧ n + 8 &gt;= 1000</code>.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="763">Useful theories for reverse engineering...</h2>
+<p data-line="765"><strong>SMT-LIB</strong> is a uniform standard for defining SMT queries via S-expressions and allows us to reuse a variety of solvers via a simple, uniform interface.</p>
+<p data-line="767">For vulnerability identification, the most important theories are usually:</p>
+<ul>
+<li data-line="769"><strong>Bit-vectors:</strong> machine integers, overflow, shifts, masks</li>
+<li data-line="770"><strong>Arrays:</strong> memory as <code>select</code> and <code>store</code></li>
+<li data-line="771"><strong>Linear arithmetic:</strong> sizes, bounds, counters</li>
+<li data-line="772"><strong>Strings / regexes:</strong> web input, parsers, validation logic</li>
+<li data-line="773"><strong>Uninterpreted functions:</strong> abstraction when exact behavior is unknown</li>
+</ul>
+<p data-line="775"><strong>Not every theory is equally important</strong> for every target. For example, strings / regex is much more useful for doing web exploitation, whereas bit-vectors are useful for binaries / C-style apps</p>
+<aside class="notes">
+<p data-line="778">Mention nonlinear arithmetic as theoretically expressive but often painful. For many binary-analysis examples, bit-vectors and arrays are the load-bearing theories.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="782">Bit-vectors: machine arithmetic, not <strong>integers</strong></h2>
+<ul>
+<li data-line="784"><p data-line="784">C integers are fixed-width.</p>
+</li>
+<li data-line="786"><p data-line="786">For example, in 8-bit unsigned arithmetic we have 250 + 10 = 4, because arithmetic is modulo <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>8</mn></msup></mrow><annotation encoding="application/x-tex">2^8</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">8</span></span></span></span></span></span></span></span></span></span></span></p>
+</li>
+</ul>
+<p data-line="788">A vulnerability query may depend on exactly this behavior:</p>
+<pre data-line="790"><code class="c">uint8_t total = len + header;
+if (total &lt; 64) memcpy(buf, input, len);
+</code></pre>
+<ul>
+<li data-line="795"><p data-line="795">If <code>len + header</code> wraps, the check may validate the wrong quantity!</p>
+</li>
+<li data-line="797"><p data-line="797">Thus, a bit-vector theory has to track the <em>size</em> of each bit vector, and operations must properly account for things like overflow, etc.</p>
+</li>
+</ul>
+</section>
+<section>
+<h2 data-line="801">How SMT solvers work, roughly</h2>
+<p data-line="803">Modern SMT solving often looks like:</p>
+<ol>
+<li data-line="805">Boolean (SAT solver) search proposes an assignment</li>
+<li data-line="806">Theory solver checks whether it makes sense</li>
+<li data-line="807">If contradiction, theory solver explains the conflict and returns a "lemma"</li>
+<li data-line="808">Boolean search learns, backtracks, and tries again</li>
+</ol>
+<aside class="notes">
+<p data-line="813">No need to do a full DPLL(T) lecture. Give just enough for students to understand why mixing theories can be hard and why the solver is not simply brute force over inputs.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="817">Figure: DPLL(T) intuition</h2>
+<div data-line="819" class="figure">
+<svg viewBox="0 0 1200 500" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="dp-navy" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000e54"/></marker>
+<marker id="dp-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d0021b"/></marker>
+<marker id="dp-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f76900"/></marker>
+</defs>
+<text class="fig-title" x="250" y="42" text-anchor="middle">Boolean search (SAT)</text>
+<text class="fig-title" x="950" y="42" text-anchor="middle">Theory solver (arithmetic)</text>
+<rect class="fig-box ctx" x="30" y="60" width="440" height="380" rx="14"/>
+<rect class="fig-box ctx" x="730" y="60" width="440" height="380" rx="14"/>
+<text class="fig-mono fig-small" x="60" y="105">A ⇒ x &lt; y</text>
+<text class="fig-mono fig-small" x="60" y="140">B ⇒ y &lt; z</text>
+<text class="fig-mono fig-small" x="60" y="175">C ⇒ z &lt; x</text>
+<text class="fig-small" x="60" y="235">assignment</text>
+<g class="fragment" data-fragment-index="1"><text class="fig-mono fig-small" x="60" y="275">A = true</text></g>
+<g class="fragment" data-fragment-index="2"><text class="fig-mono fig-small" x="60" y="310">B = true</text></g>
+<g class="fragment" data-fragment-index="3"><text class="fig-mono fig-small" x="60" y="345">C = true</text></g>
+<g class="fragment" data-fragment-index="5"><line x1="55" y1="337" x2="180" y2="337" stroke="#d0021b" stroke-width="3"/><text class="fig-mono fig-small fig-signal" x="60" y="390">C = false   (backtrack)</text></g>
+<path d="M475,150 L725,150" stroke="#f76900" stroke-width="4" fill="none" marker-end="url(#dp-orange)"/>
+<text class="fig-small" x="600" y="135" text-anchor="middle">propose A, B, C</text>
+<g class="fragment" data-fragment-index="4"><path d="M725,300 L475,300" stroke="#d0021b" stroke-width="4" fill="none" marker-end="url(#dp-red)"/><text class="fig-small fig-danger" x="600" y="285" text-anchor="middle">learn ¬A ∨ ¬B ∨ ¬C</text></g>
+<circle cx="950" cy="130" r="30" fill="#fff" stroke="#000e54" stroke-width="3"/>
+<text x="950" y="141" text-anchor="middle">x</text>
+<circle cx="1090" cy="360" r="30" fill="#fff" stroke="#000e54" stroke-width="3"/>
+<text x="1090" y="371" text-anchor="middle">y</text>
+<circle cx="810" cy="360" r="30" fill="#fff" stroke="#000e54" stroke-width="3"/>
+<text x="810" y="371" text-anchor="middle">z</text>
+<g class="fragment" data-fragment-index="1"><path d="M966,156 L1072,331" stroke="#000e54" stroke-width="3" fill="none" marker-end="url(#dp-navy)"/><text class="fig-small" x="1050" y="235">x &lt; y</text></g>
+a<g class="fragment" data-fragment-index="2"><path d="M1058,360 L844,360" stroke="#000e54" stroke-width="3" fill="none" marker-end="url(#dp-navy)"/><text class="fig-small" x="950" y="395" text-anchor="middle">y &lt; z</text></g>
+<g class="fragment" data-fragment-index="3"><path d="M826,334 L934,158" stroke="#000e54" stroke-width="3" fill="none" marker-end="url(#dp-navy)"/><text class="fig-small" x="790" y="235">z &lt; x</text></g>
+<g class="fragment fade-in-then-out" data-fragment-index="4"><path d="M966,156 L1072,331" stroke="#d0021b" stroke-width="7" fill="none" marker-end="url(#dp-red)"/><path d="M1058,360 L844,360" stroke="#d0021b" stroke-width="7" fill="none" marker-end="url(#dp-red)"/><path d="M826,334 L934,158" stroke="#d0021b" stroke-width="7" fill="none" marker-end="url(#dp-red)"/><text class="fig-small fig-danger" x="950" y="428" text-anchor="middle">cycle x &lt; y &lt; z &lt; x — conflict</text></g>
+<g class="fragment" data-fragment-index="5"><path d="M826,334 L934,158" stroke="#9a9a9a" stroke-width="9" stroke-dasharray="12,10" fill="none"/><text class="fig-small fig-signal" x="950" y="428" text-anchor="middle">no cycle — consistent ✓</text></g>
+</svg>
+</div>
+<p data-line="855">So the Boolean search learns: not all of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi><mo separator="true">,</mo><mi>C</mi></mrow><annotation encoding="application/x-tex">A, B, C</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">A</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span></span></span></span> can be true.</p>
+<aside class="notes">
+<p data-line="858">Step through: (1) SAT chooses A = true, edge x &lt; y appears. (2) B = true, edge y &lt; z. (3) C = true, edge z &lt; x. (4) the theory solver finds the red cycle and emits the learned clause ¬A ∨ ¬B ∨ ¬C. (5) SAT backtracks and sets C = false; the graph is consistent again.</p>
+<p data-line="860">Use this to make DPLL(T) visual without requiring the students to know the full algorithm.</p>
+<p data-line="862">FIGURE SPEC — "Boolean Search + Theory Conflict" (full interactive version): two cooperating boxes, left SAT search over A, B, C, right arithmetic graph with nodes x, y, z and directed <code>&lt;</code> edges; the five steps above as clickable previous / next / reset.</p>
+</aside>
+</section>
+<section class="section-divider">
+<!-- .slide: class="section-divider" -->
+<p data-line="867"><span class="chapter-num">Section • 02</span></p>
+<h1 data-line="869">Modern Cyber Reasoning Systems</h1>
+<h2 data-line="871">Does SMT still matter?</h2>
+</section>
+<section>
+<h2 data-line="875">What is a cyber-reasoning system?</h2>
+<p data-line="877">Term I made up; but I mean a frontier-LLM-orchestrated pipeline which does the following...</p>
+<ol>
+<li data-line="879">build and run a target</li>
+<li data-line="880">explore behavior</li>
+<li data-line="881">find suspicious states</li>
+<li data-line="882">prove or demonstrate a vulnerability</li>
+<li data-line="883">repair or mitigate it</li>
+<li data-line="884">validate the result</li>
+</ol>
+<ul>
+<li data-line="886"><strong>My claim</strong>: cyber reasoning systems will become <em>increasingly important</em> for both <strong>defensive</strong> and <strong>offensive</strong> tasks</li>
+</ul>
+</section>
+<section>
+<h2 data-line="890">Figure: the CRS loop</h2>
+<div data-line="892" class="figure">
+<svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="cl-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d0021b"/></marker>
+<marker id="cl-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2e8b57"/></marker>
+<marker id="cl-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7b3fa0"/></marker>
+<marker id="cl-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f76900"/></marker>
+</defs>
+<text class="fig-small" x="30" y="34">thick edges = machine-checked</text>
+<circle cx="750" cy="24" r="9" fill="#2e8b57"/><text class="fig-small" x="766" y="31">input</text>
+<circle cx="860" cy="24" r="9" fill="#d0021b"/><text class="fig-small" x="876" y="31">crash</text>
+<circle cx="970" cy="24" r="9" fill="#1f5fbf"/><text class="fig-small" x="986" y="31">constraint</text>
+<circle cx="750" cy="58" r="9" fill="#7b3fa0"/><text class="fig-small" x="766" y="65">hypothesis</text>
+<circle cx="920" cy="58" r="9" fill="#f76900"/><text class="fig-small" x="936" y="65">candidate patch</text>
+<path d="M600,68 L600,236" stroke="#9a9a9a" stroke-width="6" fill="none"/>
+<path d="M330,145 L440,238" stroke="#9a9a9a" stroke-width="6" fill="none"/>
+<path d="M870,145 L760,238" stroke="#9a9a9a" stroke-width="6" fill="none"/>
+<path d="M260,283 L428,283" stroke="#9a9a9a" stroke-width="6" fill="none"/>
+<path d="M940,283 L772,283" stroke="#9a9a9a" stroke-width="6" fill="none"/>
+<path d="M330,421 L440,328" stroke="#9a9a9a" stroke-width="2.5" fill="none"/>
+<path d="M870,421 L760,328" stroke="#9a9a9a" stroke-width="2.5" fill="none"/>
+<path d="M600,498 L600,330" stroke="#9a9a9a" stroke-width="2.5" fill="none"/>
+<rect class="fig-box world" x="430" y="238" width="340" height="90" rx="14"/>
+<text class="fig-title" x="600" y="278" text-anchor="middle">target program</text>
+<text class="fig-small" x="600" y="308" text-anchor="middle">source + build + harness</text>
+<rect class="fig-box" x="475" y="8" width="250" height="60" rx="12"/>
+<text class="fig-small" x="600" y="45" text-anchor="middle">Build harness</text>
+<rect class="fig-box" x="110" y="85" width="250" height="60" rx="12"/>
+<text class="fig-small" x="235" y="111" text-anchor="middle">Exploitability</text>
+<text class="fig-small" x="235" y="135" text-anchor="middle">checker</text>
+<rect class="fig-box" x="840" y="85" width="250" height="60" rx="12"/>
+<text class="fig-small" x="965" y="111" text-anchor="middle">Coverage-guided</text>
+<text class="fig-small" x="965" y="135" text-anchor="middle">fuzzer</text>
+<rect class="fig-box" x="10" y="253" width="250" height="60" rx="12"/>
+<text class="fig-small" x="135" y="290" text-anchor="middle">Validator</text>
+<rect class="fig-box" x="940" y="253" width="250" height="60" rx="12"/>
+<text class="fig-small" x="1065" y="279" text-anchor="middle">Symbolic executor</text>
+<text class="fig-small" x="1065" y="303" text-anchor="middle">SMT</text>
+<rect class="fig-box" x="110" y="421" width="250" height="60" rx="12"/>
+<text class="fig-small" x="235" y="458" text-anchor="middle">Patch generator</text>
+<rect class="fig-box" x="840" y="421" width="250" height="60" rx="12"/>
+<text class="fig-small" x="965" y="447" text-anchor="middle">Static analysis</text>
+<text class="fig-small" x="965" y="471" text-anchor="middle">data-flow, etc. </text>
+<rect class="fig-box model" x="475" y="498" width="250" height="60" rx="12"/>
+<text class="fig-small" x="600" y="535" text-anchor="middle">LLM agent</text>
+<g class="fragment" data-fragment-index="1"><path d="M838,110 L366,110" stroke="#d0021b" stroke-width="4" fill="none" marker-end="url(#cl-red)"/><circle cx="690" cy="110" r="11" fill="#2e8b57"/><circle cx="720" cy="110" r="11" fill="#d0021b"/></g>
+<g class="fragment" data-fragment-index="2"><path d="M838,470 L728,520" stroke="#7b3fa0" stroke-width="4" fill="none" marker-end="url(#cl-purple)"/><circle cx="790" cy="492" r="11" fill="#7b3fa0"/></g>
+<g class="fragment" data-fragment-index="3"><circle cx="860" cy="283" r="11" fill="#1f5fbf"/><path d="M1040,251 L992,148" stroke="#2e8b57" stroke-width="4" fill="none" marker-end="url(#cl-green)"/><circle cx="1016" cy="200" r="11" fill="#2e8b57"/></g>
+<g class="fragment" data-fragment-index="4"><circle cx="600" cy="440" r="11" fill="#7b3fa0"/><path d="M473,520 L364,472" stroke="#f76900" stroke-width="4" fill="none" marker-end="url(#cl-orange)"/><circle cx="418" cy="496" r="11" fill="#f76900"/></g>
+<g class="fragment" data-fragment-index="5"><path d="M260,283 L426,283" stroke="#2e8b57" stroke-width="7" fill="none" marker-end="url(#cl-green)"/><path d="M60,251 C60,20 250,-30 472,34" stroke="#2e8b57" stroke-width="4" fill="none" marker-end="url(#cl-green)"/><circle cx="340" cy="283" r="11" fill="#2e8b57"/></g>
+<g class="fragment fade-in-then-out" data-fragment-index="1"><text class="fig-small" x="600" y="590" text-anchor="middle">A — the fuzzer finds a crash and sends the input + sanitizer report to triage</text></g>
+<g class="fragment fade-in-then-out" data-fragment-index="2"><text class="fig-small" x="600" y="590" text-anchor="middle">B — static analysis points the LLM agent at a sink and a dataflow path</text></g>
+<g class="fragment fade-in-then-out" data-fragment-index="3"><text class="fig-small" x="600" y="590" text-anchor="middle">C — the symbolic executor solves a hard branch and returns a fresh seed</text></g>
+<g class="fragment fade-in-then-out" data-fragment-index="4"><text class="fig-small" x="600" y="590" text-anchor="middle">D — the LLM agent states a hypothesis and proposes a candidate patch</text></g>
+<g class="fragment" data-fragment-index="5"><text class="fig-small" x="600" y="590" text-anchor="middle">E — the validator builds, reruns the PoV, runs tests, and restarts fuzzing</text></g>
+</svg>
+</div>
+<p data-line="950">Which parts should be neural, which symbolic, which concrete?</p>
+<aside class="notes">
+<p data-line="953">The figure shows what each component consumes and produces. Step A–E with the arrow keys. Thick spokes (build, execute/sanitizer, SMT, tests) are the machine-checked edges; this supports the lecture line "Generate with AI; verify with machines."</p>
+<p data-line="955">FIGURE SPEC — "Cyber Reasoning Loop" (full interactive version)</p>
+<p data-line="957">One large interactive SVG that fills the slide. Center node: "Target program / repository". Surrounding nodes: build harness, coverage-guided fuzzer, symbolic executor / SMT, static analysis / taint, LLM agent, exploitability checker, patch generator, validator.</p>
+<p data-line="959">Moving artifact tokens: green = concrete input, red = crash / sanitizer finding, blue = path constraint, purple = source-code hypothesis, orange = candidate patch.</p>
+<p data-line="961">Interaction sequence: A. fuzzer discovers a crash and sends it to triage. B. static analysis points to a sink and dataflow path. C. symbolic executor solves a hard branch and returns a seed. D. LLM agent summarizes hypothesis and proposes patch. E. validator compiles, reruns PoV, runs tests, and restarts fuzzing.</p>
+</aside>
+</section>
+<section>
+<section>
+<h2 data-line="965">Why not just fuzz? Why not just symbolic execution?</h2>
+<div data-line="967" class="two-col">
+<div class="col-left">
+<p data-line="970"><strong>Fuzzing</strong> is excellent when:</p>
+<ul>
+<li data-line="972">executions are cheap and coverage tracks progress</li>
+<li data-line="973">bugs are shallow enough to stumble into</li>
+</ul>
+<p data-line="975">It struggles when:</p>
+<ul>
+<li data-line="977">inputs are deeply structured or need semantic consistency</li>
+<li data-line="978">the useful path is guarded by narrow constraints or state sequences</li>
+</ul>
+</div>
+<div class="col-right">
+<p data-line="983"><strong>Symbolic execution</strong> is excellent when:</p>
+<ul>
+<li data-line="985">the relevant path is narrow and the query is precise</li>
+<li data-line="986">constraints are within solver reach</li>
+</ul>
+<p data-line="988">It struggles when:</p>
+<ul>
+<li data-line="990">path explosion dominates or solvers time out</li>
+<li data-line="991">memory, system interactions, or a missing harness get in the way</li>
+</ul>
+</div>
+</div>
+<p data-line="996">A CRS allocates each engine where it has leverage.</p>
+<p data-line="998" class="source">The classic hybrid: Stephens et al., "Driller: Augmenting Fuzzing Through Selective Symbolic Execution," NDSS 2016.</p>
+<aside class="notes">
+<p data-line="1001">Where fuzzing stalls is where symbolic reasoning, static analysis, and LLM guidance enter. Where symbolic execution explodes is where cheap concrete execution takes over. Driller is the canonical example of handing off between the two.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="1005">The handoff, concretely: hybrid fuzzing</h2>
+<div data-line="1007" class="two-col">
+<div class="col-left">
+<p data-line="1010"><strong>Driller's loop</strong> (QSYM and SymCC made it fast)</p>
+<ol>
+<li data-line="1012"><strong>Fuzz.</strong> Mutation is nearly free; it finds every shallow path</li>
+<li data-line="1013"><strong>Stall.</strong> No new coverage; every queued input dies at the same branches</li>
+<li data-line="1014"><strong>Trace.</strong> Re-run a stalled input <em>concolically</em>: concrete values, but record the path condition as it goes</li>
+<li data-line="1015"><strong>Flip.</strong> At a branch the fuzzer never took, negate its condition and ask SMT</li>
+<li data-line="1016"><strong>Seed.</strong> SAT means the model is a new input. Push it into the fuzzer's queue; go to 1</li>
+</ol>
+</div>
+<div class="col-right">
+<pre data-line="1021"><code class="c">if (hdr.magic != 0x41424344) return; // 1 in 2^32 by mutation
+if (hdr.len &gt; body_len)      return; // relation between fields
+if (!json_parse(body, &amp;doc)) return; // 10k-line parser
+use(doc);                            // the bug is here
+</code></pre>
+<ul>
+<li data-line="1028"><strong>Fuzzer alone:</strong> stuck on line 1</li>
+<li data-line="1029"><strong>+ SMT:</strong> lines 1–2 fall in milliseconds; then the solver explodes inside the parser</li>
+<li data-line="1030"><strong>+ LLM</strong> (ChatAFL, HLPFuzz): writes a valid body; the fuzzer mutates from there</li>
+</ul>
+</div>
+</div>
+<div data-line="1035" class="callout note">Symbolic execution is a <em>subroutine</em> here, not the driver: it is called only on the branches where its expensive query pays for itself, and its answer is still just a seed the fuzzer has to run.</div>
+<p data-line="1037" class="source">Stephens et al., <a href="https://www.ndss-symposium.org/ndss2016/ndss-2016-programme/driller-augmenting-fuzzing-through-selective-symbolic-execution/">Driller</a>, NDSS 2016; Yun et al., <a href="https://www.usenix.org/conference/usenixsecurity18/presentation/yun">QSYM</a>, USENIX Security 2018; Poeplau and Francillon, <a href="https://www.usenix.org/conference/usenixsecurity20/presentation/poeplau">SymCC</a>, USENIX Security 2020.</p>
+<aside class="notes">
+<p data-line="1040">Vertical backup under the fuzz-versus-symbolic slide; press down if there is time, or when a student asks how the handoff actually works.</p>
+<p data-line="1042">Driller (NDSS 2016) pairs AFL with angr. Its framing: a fuzzer explores freely inside a "compartment" of the program but cannot cross the wall between compartments, which is a specific check such as a magic value or a checksum. Concolic execution is invoked only when the fuzzer stalls, only on the inputs already in its queue, and only to cross that wall.</p>
+<p data-line="1044">QSYM (USENIX Security 2018) made the concolic step fast enough for real programs by instrumenting native execution instead of interpreting IR, and added optimistic solving: when the whole path constraint is unsatisfiable (usually over-constraining from incomplete modelling), solve only the last branch's constraint and let the fuzzer check the result. Say this out loud: it is the guess-then-check pattern of the LLM systems, with a solver as the guesser, and it is the thesis of the lecture in one design decision.</p>
+<p data-line="1046">SymCC (USENIX Security 2020) compiles the symbolic bookkeeping into the target with an LLVM pass, another order of magnitude faster.</p>
+<p data-line="1048">The third line of the example is where all of them run out: a hand-written parser is thousands of branches deep and its internal state is not something the solver's theories describe well (HLPFuzz's complaint about incomplete semantics modelling and over-constraining). That is exactly the slot the LLM fills on the ChatAFL and HLPFuzz slides.</p>
+</aside>
+</section>
+</section>
+<section>
+<h2 data-line="1052">Why not just ask an LLM?</h2>
+<p data-line="1054">LLMs are useful for:</p>
+<ul>
+<li data-line="1056">code comprehension</li>
+<li data-line="1057">hypothesis generation</li>
+<li data-line="1058">recognizing protocols and formats</li>
+<li data-line="1059">explaining tool output</li>
+<li data-line="1060">proposing harnesses or patches</li>
+</ul>
+<p data-line="1063"><strong>Main idea</strong>: <em>Guess</em> / generate hypotheses with LLM, then <em>check</em> with tools to provide ground truth</p>
+<ul>
+<li data-line="1064">Tests, symbolic execution, fuzzing (e.g., with seed generated by LLM)</li>
+</ul>
+</section>
+<section class="section-divider">
+<!-- .slide: class="section-divider" -->
+<p data-line="1069"><span class="chapter-num">Section • 03</span></p>
+<h1 data-line="1071">Recent systems</h1>
+<h2 data-line="1073">What changed in the last 2–4 years?</h2>
+</section>
+<section>
+<h2 data-line="1077">Reading map</h2>
+<p data-line="1079">There are several different kinds of cyber-reasoning systems in the literature:</p>
+<table data-line="1081"><thead><tr><th>System kind</th><th>Representative examples</th></tr></thead><tbody>
+<tr><td>LLM-guided fuzzing</td><td>ChatAFL, HLPFuzz, ELFuzz, PANGOLIN</td></tr>
+<tr><td>Agentic pentesting</td><td>PentestGPT, Cybench</td></tr>
+<tr><td>Agent-computer interface</td><td>SWE-agent</td></tr>
+<tr><td>End-to-end vulnerability lifecycle</td><td>BountyBench, AIxCC</td></tr>
+<tr><td>Firmware / binary-oriented CRS</td><td>FirmAgent</td></tr>
+<tr><td>Real-world agentic research</td><td>Project Naptime / Big Sleep</td></tr>
+</tbody></table>
+<ul>
+<li data-line="1090">Disclaimer: I have not read all of these papers myself, though I've skimmed them; we will cover these papers based on student interest this semester.</li>
+</ul>
+</section>
+<section>
+<h2 data-line="1094">ChatAFL — LLM-guided protocol fuzzing</h2>
+<p data-line="1096"><strong>NDSS 2024, Meng et al., built on AFLNet.</strong> The LLM has already read the RFCs: ask it narrow questions, and let coverage judge every answer.</p>
+<div data-line="1098" class="two-col">
+<div class="col-left">
+<p data-line="1101">Three insertion points in the fuzzing loop:</p>
+<ul>
+<li data-line="1103"><strong>Grammar</strong>, once per protocol → structure-aware mutation</li>
+<li data-line="1104"><strong>Seeds</strong>: add the message types the recorded traces lack</li>
+<li data-line="1105"><strong>Plateau</strong>: coverage stalls → "what message comes next?"</li>
+</ul>
+<p data-line="1107"><strong>Result</strong> vs. AFLNet, six servers: +47.6% state transitions, nine zero-days.</p>
+</div>
+<div class="col-right">
+<p data-line="1112"><img src="chatafl-fig6-grammar-prompt.png" alt="Few-shot grammar prompt and the LLM&#39;s reply (Fig. 6)" /></p>
+</div>
+</div>
+<p data-line="1117" class="source">Source: Meng et al., <a href="https://www.ndss-symposium.org/ndss-paper/large-language-model-guided-protocol-fuzzing/">"Large Language Model guided Protocol Fuzzing,"</a> NDSS 2024.</p>
+<aside class="notes">
+<p data-line="1120">Position ChatAFL as the "LLM as semantic helper" paper — the approachable bridge from AFL-style coverage to LLM guidance. Do not teach it as "the LLM finds bugs." The fuzzer still does high-throughput exploration, the LLM supplies grammar and state hints, and coverage is the objective feedback. Walk the three insertion points: Algorithm 1 in the paper shades exactly the lines that differ from AFLNet, and that shading is the whole contribution.</p>
+<p data-line="1122">Details now off the slide: nothing is trusted as-is. The grammar is majority-voted over repeated prompts, and every generated message still runs against the real server. The plateau trigger is 512 inputs with no new coverage. Full numbers: +47.6% state transitions, +29.6% states, +5.8% branches over AFLNet on six ProFuzzBench servers; nine zero-days in Live555, ProFTPD, and Kamailio, seven potentially RCE; AFLNet found 3 of them, NSFuzz 4.</p>
+<p data-line="1124">Bug #1 (heap use-after-free in Live555) is the worked example: it needs SETUP → PLAY → PAUSE → PLAY, PAUSE was absent from every AFLNet and NSFuzz seed, and the LLM added it during seed enrichment and predicted it again when the fuzzer was stuck in the PLAY state.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="1128">Tool-using agents — PentestGPT and Project Naptime</h2>
+<div data-line="1130" class="two-col">
+<div class="col-left">
+<p data-line="1133"><strong>PentestGPT</strong> — USENIX Security 2024 (Deng et al.)</p>
+<ul>
+<li data-line="1135"><strong>Benchmark first:</strong> 13 HackTheBox / VulnHub machines, 182 sub-tasks</li>
+<li data-line="1136">Plain LLMs do the pieces but <strong>lose the overall picture</strong> and <strong>fixate on the latest output</strong></li>
+<li data-line="1137"><strong>Fix:</strong> a <strong>Pentesting Task Tree</strong> owned by a Reasoning module; Generation writes the commands, Parsing condenses tool output</li>
+</ul>
+</div>
+<div class="col-right">
+<p data-line="1142"><strong>Project Naptime / Big Sleep</strong> — Project Zero, DeepMind</p>
+<ul>
+<li data-line="1144">Code browser, debugger, Python sandbox, verifier</li>
+<li data-line="1145">Industrial case study, not a benchmark</li>
+<li data-line="1146">Every claim checked by concrete execution</li>
+</ul>
+</div>
+</div>
+<p data-line="1151">Both are the CRS loop (explore → observe → reason → act → validate); the hard part is keeping <strong>state</strong> across many tool calls. <strong>SWE-agent</strong> made the same point: the <em>agent-computer interface</em> decides what the agent can find.</p>
+<p data-line="1153" class="source">Sources: Deng et al., <a href="https://www.usenix.org/conference/usenixsecurity24/presentation/deng">PentestGPT, USENIX Security 2024</a>; <a href="https://projectzero.google/2024/06/project-naptime.html">Project Naptime</a>; <a href="https://proceedings.neurips.cc/paper_files/paper/2024/hash/5a7c947568c1b1328ccc5230172e1e7c-Abstract-Conference.html">SWE-agent, NeurIPS 2024</a>.</p>
+<aside class="notes">
+<p data-line="1156">Teach the ordering for PentestGPT: the benchmark came first, and the architecture is a direct response to the two failure modes it exposed (context loss, recency bias). Numbers if asked: sub-task completion +228.6% over GPT-3.5, +58.6% over GPT-4; 4 of 10 real HackTheBox challenges solved. The three modules are each their own LLM session: Reasoning (lead tester) owns the task tree and picks the next sub-task; Generation (junior tester) turns it into exact commands; Parsing condenses tool output, source code, and web pages before they enter context. The task tree is exactly the state that "just ask an LLM" lacks in the CRS loop figure. Use Naptime as an industrial case study, not as a top-conference academic system. Neither is a fuzzer or symbolic execution. The shared lesson across all three: what the agent can see and do shapes what it can find. The interface to the computer is a design decision, not a detail.</p>
+<hr />
+<h2 data-line="1159">Measuring cyber agents</h2>
+<div data-line="1161" class="two-col">
+<div class="col-left">
+<p data-line="1164"><strong>Cybench</strong> — ICLR 2025</p>
+<p data-line="1166">Agents solve executable CTF tasks inside a live environment, not multiple-choice questions.</p>
+<ul>
+<li data-line="1168">40 professional-level tasks from four competitions</li>
+<li data-line="1169">scored on whether the agent <em>completes</em> the task</li>
+<li data-line="1170">difficulty calibrated by human first-solve time</li>
+</ul>
+</div>
+<div class="col-right">
+<p data-line="1175"><strong>BountyBench</strong> — NeurIPS 2025 Datasets &amp; Benchmarks</p>
+<p data-line="1177">Tasks drawn from real bug bounties span the whole lifecycle:
+Detect → Exploit → Patch</p>
+<ul>
+<li data-line="1181">finding a candidate is one thing</li>
+<li data-line="1182">proving it is exploitable is another</li>
+<li data-line="1183">patching it without breaking behavior is a third</li>
+</ul>
+</div>
+</div>
+<p data-line="1190" class="source">Sources: <a href="https://cybench.github.io/">Cybench site</a>, <a href="https://openreview.net/forum?id=tc90LV0yRL">OpenReview</a>; <a href="https://openreview.net/forum?id=pIsP4lMlFd">BountyBench, OpenReview</a>, <a href="https://github.com/EnvCommons/BountyBench">GitHub</a>.</p>
+<p data-line="1192">Note:
+BountyBench's phase split is exactly the CRS abstraction we want: detection, exploitation, and patching are three different skills, and an agent can be good at one and bad at the others.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="1197">In the wild: autonomous pentesting agents</h2>
+<div data-line="1199" class="two-col">
+<div class="col-left">
+<div data-line="1202" class="trace">
+<div class="q">Target in scope: a web app, black box. Goal: a finding the validator will sign.</div>
+<div class="fragment thought">Thought 1: /api/preview?url= fetches URLs server-side. Hypothesis: SSRF.</div>
+<div class="fragment action">Act 1: GET /api/preview?url=http://canary-7f3a.example/</div>
+<div class="fragment obs">Obs 1: canary logs a hit from the target's egress IP. The server fetches attacker URLs.</div>
+<div class="fragment action">Act 2: GET /api/preview?url=http://169.254.169.254/latest/meta-data/</div>
+<div class="fragment obs">Obs 2: 200 OK; body lists iam/ and hostname. Internal network is reachable.</div>
+<div class="fragment action">Act 3: Validate[SSRF]: replay Act 1 from a clean session; require the canary hit.</div>
+<div class="fragment obs">Obs 3: PASS. Report drafted for human review.</div>
+</div>
+</div>
+<div class="col-right">
+<ul>
+<li data-line="1216"><strong>Tools:</strong> proxy, crawler, headless browser, scripting sandbox; the agent sees requests and responses</li>
+<li data-line="1217"><strong>One agent per hypothesis:</strong> many runs per target in parallel, each exploring a class: SSRF, SQLi, XSS, IDOR, path traversal</li>
+<li data-line="1218"><strong>One validator per class:</strong> a finding "counts" only when we can reproduce it</li>
+<li data-line="1219"><strong>Human before disclosure:</strong> the validator removes false positives; a <strong>human</strong> judges scope and impact</li>
+</ul>
+</div>
+</div>
+<p data-line="1225" class="source">Composite of public engineering write-ups from commercial autonomous pentesters (e.g. XBOW, RunSybil); no single vendor's internals are shown. Leaderboard claim: <a href="https://xbow.com/blog/">XBOW blog</a>, 2025.</p>
+<aside class="notes">
+<p data-line="1228">This is a composite, not a description of any one product. Several commercial systems publish enough to see the shape: an LLM agent driving standard web tooling (proxy, crawler, headless browser, scripting sandbox) in a ReAct-style loop; many agents in parallel per target, each chasing one vulnerability class; and a validator per class that has to reproduce the finding before it is reported. One such system topped a HackerOne leaderboard in mid-2025 after submitting on the order of a thousand reports over a few months, with human pentesters reviewing findings before submission; the validators are what made that volume possible without burying triagers in false positives. Say "systems like this" rather than a company name.</p>
+<p data-line="1230">Use the trace as the worked example. The canary callback in Obs 1 is the machine-checked edge: the target's server, not the model, made that request. The metadata endpoint in Obs 2 is what turns "SSRF" into "impact". Act 3 is the validator replaying the exploit from a clean session so a stale cookie or a lucky race cannot count.</p>
+<p data-line="1232">Contrast with the source-level systems: there is no harness, no sanitizer, and no coverage signal, so the validators have to be built per vulnerability class (a canary for SSRF, a browser that actually executes the payload for XSS, an extracted canary row for SQLi). No fuzzer or solver in this loop, which is itself a data point for the "does SMT still matter" question: for black-box web targets the cheap oracle is the live server, and the strings/regex theories from the useful-theories slide rarely get called.</p>
+</aside>
+</section>
+<section>
+<section>
+<h2 data-line="1236">PANGOLIN: LLM-recovered specs for firmware fuzzing</h2>
+<p data-line="1238"><strong>Venue:</strong> USENIX Security 2026 — Jia et al. Targets the web interfaces of IoT firmware.
+<strong>Core idea:</strong> real firmware crosses language boundaries (C binaries calling Lua/PHP/shell scripts) and its reachable interfaces are undocumented. A fuzzer cannot test a format nobody wrote down, so the LLM recovers the spec and the fuzzer tests against it.</p>
+<ul>
+<li data-line="1241"><strong>Entry map (§4.1):</strong> statistics isolate the dispatch code; the LLM reads only that and maps every URI, hidden ones included, to its handler</li>
+<li data-line="1242"><strong>Parameter spec (§4.2):</strong> one agent prunes the cross-language call graph down to parsing and sanitizer calls; another writes a JSON spec per URI, marking each field Muta or NoMuta</li>
+<li data-line="1243"><strong>Correction loop (§4.3):</strong> the fuzzer keeps NoMuta fields fixed and mutates the rest on the real device; a response that contradicts the spec goes back to the agents</li>
+</ul>
+<div data-line="1245" class="callout note">Neural steps propose the entry map and the spec; the concrete step, the device, decides. A wrong spec finds nothing, and that silence is the signal.</div>
+<p data-line="1247"><strong>Results:</strong> 68 zero-days, 45 of them on hidden interfaces (EAGLEYE found 4); 2.96× the previous best, LABRADOR.</p>
+<p data-line="1249" class="source">Source: Jia et al., <a href="https://www.usenix.org/conference/usenixsecurity26/presentation/jia-zhipeng">"PANGOLIN: Fuzzing Multilingual IoT Firmware with LLM-Driven Code Analysis,"</a> USENIX Security 2026. Press down for the paper's own overview figure.</p>
+<aside class="notes">
+<p data-line="1252">The story is not "LLM finds firmware bugs." It is: the LLM recovers the spec that was never written down (interfaces, parameter formats), and the fuzzer does the actual testing against that spec. If the recovered spec is wrong, the fuzzer finds nothing, which is the signal that the neural step misfired. This is very close to the CRS architecture we have been building: neural proposes, concrete decides. The sub-slide below has the authors' Figure 4 if anyone wants the full pipeline.</p>
+<p data-line="1254">Details worth saying aloud:</p>
+<ul>
+<li data-line="1255">The dispatch functions are found statistically, not by the LLM: split the public URIs from traffic into strings, count them per function, and the functions with a frequency jump are the dispatch code. Only those get handed to the LLM, with three few-shot dispatch patterns (registration function, data segment, filename).</li>
+<li data-line="1256">Pruning is what makes the cross-language call graph fit a context window: from each handler point the agent keeps at most three callees per hop, and only calls that parse parameters or sanitize them.</li>
+<li data-line="1257">The spec labels each field Muta or NoMuta. Routing keys and format-checked values are NoMuta and never mutated; that is what gets requests past the parser. Weakly sanitized fields get a vulnerability type and a payload.</li>
+<li data-line="1258">A sequence-recognition step groups URIs that depend on each other (login before configure), so the fuzzer sends them in order.</li>
+<li data-line="1259">The correction loop feeds pruned-MCG nodes, the generated spec, and error output back for the first N rounds; a response that contradicts the spec is the signal that a neural step hallucinated.</li>
+<li data-line="1260">Numbers: 68 0-days, 45 on hidden interfaces (EAGLEYE found 4), 2.96x LABRADOR, 31 IDs assigned at time of writing.</li>
+</ul>
+</aside>
+</section>
+<section>
+<h2 data-line="1264">PANGOLIN — the paper's own overview</h2>
+<p data-line="1266"><img src="pangolin-fig4-overview.png" alt="Figure 4 from the paper: Entry Map Construction (§4.1), Parameter Specification Generation (§4.2), Correction and Specification Guidance (§4.3)" /></p>
+<p data-line="1268" class="source">Source: Jia et al., <a href="https://www.usenix.org/conference/usenixsecurity26/presentation/jia-zhipeng">PANGOLIN</a>, USENIX Security 2026, Figure 4. Red arrows are the response-driven correction loop.</p>
+<aside class="notes">
+<p data-line="1271">Backup only: the authors' Figure 4, for anyone who wants to map the redrawn figure on the slide above back to the paper. Same three modules; the red arrows are the response-driven correction loop feeding back into pruning and specification generation.</p>
+</aside>
+</section>
+</section>
+<section>
+<h2 data-line="1275">The DARPA AIxCC Competition</h2>
+<p data-line="1277"><strong>Final round, DEF CON 33, August 2025.</strong> Seven fully autonomous CRSs, no human in the loop, against 70 vulnerabilities injected into OSS-Fuzz-style C and Java projects (SQLite, libxml2, FreeRDP, Apache Tika, ZooKeeper, …).</p>
+<div data-line="1279" class="two-col">
+<div class="col-left">
+<p data-line="1282"><strong>What a CRS had to submit</strong></p>
+<ul>
+<li data-line="1284"><strong>PoV</strong>: an input to a named fuzz harness that trips a sanitizer when the organisers replay it</li>
+<li data-line="1285"><strong>Patch</strong>: must build, pass the project's own tests, and stop the PoV; no human reviews it</li>
+<li data-line="1286"><strong>SARIF triage</strong>: label a static-analysis report true or false</li>
+<li data-line="1287">Targets arrive as a <em>full scan</em> of a repository or a <em>delta scan</em> of one commit</li>
+<li data-line="1288">An <em>accuracy multiplier</em> penalised rejected PoVs and broken patches, so guessing <strong>costs</strong>!</li>
+</ul>
+</div>
+<div class="col-right">
+<p data-line="1293"><strong>Results</strong></p>
+<table data-line="1295"><thead><tr><th></th><th>found</th><th>patched</th></tr></thead><tbody>
+<tr><td>synthetic (70 injected)</td><td><strong>54</strong> (77%)</td><td><strong>43</strong> (61%)</td></tr>
+<tr><td>real, previously unknown</td><td><strong>18</strong></td><td><strong>11</strong></td></tr>
+</tbody></table>
+<p data-line="1300">Headline pace: about 45 minutes per discovery, roughly 152 USD of LLM and compute per task.</p>
+<div data-line="1302" class="callout good">Finding bugs is easier than repairing: 77% found, only 61% also patched.</div>
+</div>
+</div>
+<p data-line="1307" class="source">1st Team Atlanta (4M USD) &bull; 2nd Trail of Bits (3M USD) &bull; 3rd Theori (1.5M USD). Source: <a href="https://www.darpa.mil/news/2025/aixcc-results">DARPA AIxCC final results</a>, Aug 2025. All seven CRSs were open-sourced after the final.</p>
+<aside class="notes">
+<p data-line="1310">Podium: Team Atlanta (Georgia Tech, Samsung, KAIST, POSTECH) first, Trail of Bits second, Theori third. The other four finalists were all_you_need_is_a_fuzzing_brain, Shellphish, 42-b3yond-6ug, and Lacrosse. Read the table as two ratios: 77% of injected bugs were found, but only 61% were also patched, so proving is easier than repairing even for the best systems. The 18 real bugs matter because nobody planted them; the CRSs found them while hunting the synthetic ones, and 11 of those fixes were accepted. In the 2024 semifinal the targets included the Linux kernel, Jenkins, Nginx, SQLite, and Tika, and Team Atlanta's system found a real null-pointer bug in SQLite there. Scoring in the final rules weighted a patch far above a PoV (6 points vs 2, with 1 each for SARIF assessment and for bundling PoV, patch, and SARIF together; verify against the published rules), and the whole score was multiplied by an accuracy term, which is why the systems had to be conservative about what they submitted. The point for us: discovery, proof, patch, and validation were each scored separately, which is exactly the evidence separation the synthesis section argues for.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="1314">Inside an AIxCC-style CRS: who does what</h2>
+<table data-line="1316"><thead><tr><th>Stage</th><th>Engine that does the work</th><th>What decides it worked</th></tr></thead><tbody>
+<tr><td>Build + harness</td><td>OSS-Fuzz build; LLM writes extra harnesses, seeds, dictionaries</td><td>it compiles and runs</td></tr>
+<tr><td>Discovery</td><td>libFuzzer / AFL++ (Jazzer for Java) on many cores</td><td>sanitizer crash</td></tr>
+<tr><td>Stuck branch</td><td>concolic execution (SymCC-style) or an LLM-written input</td><td>new coverage</td></tr>
+<tr><td>Where to look</td><td>static analysis; on a <em>delta scan</em> the LLM reads the commit diff and directs fuzzing at it</td><td>the sink gets covered</td></tr>
+<tr><td>Triage</td><td>LLM reads the sanitizer report and the code, names the root cause</td><td>PoV replays deterministically</td></tr>
+<tr><td>Patch</td><td>LLM proposes several candidate patches</td><td>build, project tests, PoV no longer trips</td></tr>
+<tr><td>SARIF</td><td>LLM plus fuzzer evidence labels the static report</td><td>scoring harness</td></tr>
+</tbody></table>
+<aside class="notes">
+<p data-line="1328">This is a pattern-level composite of the finalists' post-competition write-ups; verify before attributing a specific technique to a specific team. All seven systems were open-sourced after the final (Atlantis, Buttercup, RoboDuck, ARTIPHISHELL, and the rest).</p>
+<p data-line="1330">Common shape: OSS-Fuzz's build and harness infrastructure is the substrate. libFuzzer and AFL++ (Jazzer for the Java targets) do discovery on many cores. LLMs generate seeds, dictionaries, and extra harnesses, and on delta-scan tasks read the commit diff to guess what it broke and direct fuzzing at that code, which is why delta scans were much cheaper than full scans. Some teams ran concolic execution for stuck branches; others leaned harder on LLM agents that read code the way an auditor would, with fuzzing as confirmation. Crash triage is an LLM reading the sanitizer report and the source to name a root cause; the PoV is only submitted once it reproduces deterministically in the team's own replay. Patching is an LLM proposing several candidates, each of which has to build, pass the project's tests, and stop the PoV before it is submitted; teams kept the survivors and discarded the rest.</p>
+<p data-line="1332">The accuracy multiplier is why every team had an internal validator before submission, and that is the point to stress: the LLM never scores a point directly. Map each row onto the CRS loop figure: harness and build at the top, fuzzer and symbolic executor on the right, static analysis and LLM at the bottom, validator on the left.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="1336">The recurring architecture</h2>
+<p data-line="1338">Every system here runs one loop: <strong>semantic hint → executable experiment →  feedback</strong></p>
+<table data-line="1340"><thead><tr><th>System</th><th>Hint</th><th>Experiment</th><th>Check</th></tr></thead><tbody>
+<tr><td>Driller / QSYM</td><td>solver model for a negated branch</td><td>run it as a seed</td><td>new coverage</td></tr>
+<tr><td>ChatAFL</td><td>LLM grammar, next message</td><td>send to the server</td><td>coverage</td></tr>
+<tr><td>HLPFuzz</td><td>LLM solves the stuck branch</td><td>run the processor</td><td>target block runs</td></tr>
+<tr><td>PANGOLIN</td><td>LLM entry map and spec</td><td>fuzz the device</td><td>responses match spec</td></tr>
+<tr><td>Autonomous pentester</td><td>LLM vulnerability hypothesis</td><td>HTTP requests</td><td>per-class validator</td></tr>
+<tr><td>AIxCC CRS</td><td>LLM triage and patch</td><td>PoV, patched build</td><td>sanitizer, tests, replay</td></tr>
+</tbody></table>
+<aside class="notes">
+<p data-line="1350">The first row is the point of the table: the guess-then-check loop predates LLMs by a decade, with a solver as the guesser. LLMs widened what the hint can be (a grammar, a spec, a patch) without changing what counts as evidence. Read down the Check column: every entry is concrete execution or a solver, never a model's opinion.</p>
+</aside>
+</section>
+<section>
+<h2 data-line="1354">Viewing a single bug through from POV of many tools...</h2>
+<div data-line="1356" class="two-col">
+<div class="col-left">
+<p data-line="1359">Back to the very first example:</p>
+<pre data-line="1361"><code class="c">char buf[64];
+if (len &lt; 64 &amp;&amp; magic == 0x41424344) {
+  memcpy(buf, input, len + 16);
+}
+</code></pre>
+<div data-line="1368" class="callout note">Fuzzing supplies ground truth. Symbolic execution phrases the question. SMT answers it. The LLM does the guessing.</div>
+</div>
+<div class="col-right">
+<ol data-line="1373">
+<li class="fragment"><strong>Fuzzer.</strong> Millions of runs a minute, but a random 4-byte <code>magic</code> matches once in 2<sup>32</sup>. Coverage stalls at the <code>if</code>.</li>
+<li class="fragment"><strong>Symbolic execution.</strong> Re-runs a stalled input concolically. Path condition to the <code>memcpy</code>: <code>len &lt; 64 ∧ magic = 0x41424344</code>.</li>
+<li class="fragment"><strong>SMT.</strong> Bit-vector query, milliseconds: SAT with <code>magic = 0x41424344, len = 0</code>. If you know the safety property, ask it directly: <code>len &lt; 64 ∧ len + 16 &gt; 64</code> is SAT with <code>len = 49</code>.</li>
+<li class="fragment"><strong>Fuzzer.</strong> The model is a seed. It passes the check; a few mutations of <code>len</code> later, ASan reports a stack-buffer-overflow at the <code>memcpy</code>. Input + report = PoV.</li>
+<li class="fragment"><strong>LLM.</strong> Reads the report and the function, names the cause (the check bounds <code>len</code>, the copy uses <code>len + 16</code>), proposes <code>len + 16 &lt;= sizeof buf</code>, writes a regression test.</li>
+<li class="fragment"><strong>Validator.</strong> Build, tests, replay the PoV: no crash. Fuzzing restarts on the patched binary.</li>
+</ol>
+</div>
+</div>
+<aside class="notes">
+<p data-line="1386">This is the synthesis slide: the four engines the lecture promised, on the very first example from the goal slide, with the CRS loop figure as the map. Build with the arrow keys.</p>
+<p data-line="1388">Emphasise the cost story at each step. Mutation is free but blind: a 4-byte magic value is a 1-in-4-billion event for a random mutator, which is why coverage stalls. The solver is exact but only answers the question it is asked, so someone has to phrase the path condition, and, if you know the safety property, the violation condition too (step 3's second query is the same shape as the examinable path-condition slide). The fuzzer then confirms the model by execution, which is the only evidence that counts; note that the solver's first model (len = 0) does not crash, and that is fine, because behind the gate the bug is shallow and the fuzzer finds it in seconds. That is Driller's "compartments" argument in miniature. The LLM enters at the point where reading is required: what the check was supposed to enforce, and what patch preserves that intent without breaking the tests. The validator is the same machine-checked edge as in the CRS figure.</p>
+<p data-line="1390">Static analysis (next lecture) would flag len + 16 against sizeof buf without running anything, at the price of false alarms, and a real CRS would use it to point the fuzzer at this function in the first place.</p>
+<p data-line="1392">Ask the room: which of the six steps could an LLM do alone, and which would you refuse to take its word for?</p>
+</aside>
+</section>
+<section>
+<h2 data-line="1396">So, does SMT still matter?</h2>
+<p data-line="1398"><strong>Yes, as a component, not the driver.</strong> Each engine is trusted for something different:</p>
+<ul>
+<li data-line="1400"><strong>Fuzzing:</strong> cheap and never wrong, but blind.</li>
+<li data-line="1401"><strong>Symbolic execution + SMT:</strong> exact, and can say "no such input exists," but can't <em>prove</em></li>
+<li data-line="1402"><strong>LLM:</strong> great at guessing, use in a loop with conventional tools</li>
+</ul>
+<p data-line="1404">To me, the big question is: how does LLM+X change the game versus traditional tools?</p>
+<blockquote data-line="1406"><p data-line="1406">We'll explore this question as the answer evolves over the course of the semester! :-)</p>
+</blockquote>
+<aside class="notes">
+<p data-line="1408">Close the loop with the question from the "Is SMT really AI?" slide and the Section 2 divider. The answer is "yes, as a component, not as the driver." Each engine is trustworthy along a different axis; the LLM is the only one that reads meaning but also the only one that is routinely wrong. Every system in this lecture is arranged so the wrong-able engines only propose and the exact or concrete engines decide.</p>
+<p data-line="1410">Evidence if asked: HLPFuzz calls the LLM only for the branch that concolic execution and SMT cannot model, and still runs the same propose-then-check loop. QSYM already traded soundness for speed because the fuzzer checks answers for free; an LLM is that trade taken further. At AIxCC, fuzzers found the bugs, LLMs wrote harnesses, seeds, triage, and patches, and validators scored all of it. No system replaced the validator.</p>
+<p data-line="1412">If a student pushes on "why not just LLM + fuzzer, drop the solver": a magic value or a length relation is a millisecond for a bit-vector solver and a coin flip for a language model, and the solver's UNSAT is a proof that the fuzzer should stop wasting time on that branch. Conversely the solver cannot write a valid JSON body or guess that PAUSE comes after PLAY. Different questions, different oracles. Next lecture adds static analysis, the other engine that can say "no", and about a whole program rather than one path.</p>
+</aside>
+</section>
+
+      </div>
+    </div>
+    <script src="../engine/reveal/dist/reveal.js"></script>
+    <script src="../engine/reveal/plugin/highlight/highlight.js"></script>
+    <script src="../engine/reveal/plugin/notes/notes.js"></script>
+    <script>
+      Reveal.initialize(Object.assign({"backgroundTransition":"fade","controls":true,"hash":true,"height":800,"history":true,"margin":0.06,"maxScale":2.0,"minScale":0.2,"pdfSeparateFragments":false,"progress":true,"slideNumber":"c/t","transition":"slide","width":1280}, { plugins: [RevealHighlight, RevealNotes] }));
+    </script>
+    
+  </body>
+</html>
