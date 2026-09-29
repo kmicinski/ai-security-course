@@ -640,7 +640,7 @@ practical checker over-approximates. False positives are the price of soundness.
 
 </div>
 
-<div class="callout note"><strong>Try it:</strong> the <a href="../../examples/03-information-flow/">Information Flow Challenge</a> &mdash; eight programs, three observers. Decide what a public observer learns, then watch each program run over its whole secret input space and check yourself against Denning's type checker.</div>
+<div class="callout note"><strong>Try it:</strong> the <a href="../../labs/demos/03-information-flow/">Information Flow Challenge</a> &mdash; eight programs, three observers. Decide what a public observer learns, then watch each program run over its whole secret input space and check yourself against Denning's type checker.</div>
 
 Note:
 The counterpart to the previous slide: there we saw a program the checker
