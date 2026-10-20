@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Class Project</title>
+  <meta name="description" content="The class project allows you to explore a relevant topic in anopen-ended way.  You will pick a topic at the intersection of AI andsecurity. It is worth 25% o...">
+
+  <!-- Favicon: Syracuse navy tile, orange security shield, cyan-accented AI graph node -->
+  <link rel="icon" href="/ai-security-course/assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/ai-security-course/assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="/ai-security-course/assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="/ai-security-course/assets/apple-touch-icon.png">
+  <meta name="theme-color" content="#000E54">
+
+  <!-- The stylesheet asks for Open Sans at weight 300 with bold emphasis, but the
+       family was never actually loaded, so every weight resolved to the same
+       fallback face and bold text rendered indistinguishable from body text. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://kmicinski.com/ai-security-course/css/main.css">
+  <link rel="canonical" href="https://kmicinski.com/ai-security-course/projects/class-project/">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+</head>
+
+  <body>
+
+    <header class="site-header">
+  <div class="wrapper site-header__inner">
+
+    <a class="site-title" href="/ai-security-course/">
+      <span class="site-title__id">CIS 400</span>
+      <span class="site-title__sep">/</span>
+      <span class="site-title__name">Cybersecurity &amp; AI</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-link"
+         href="/ai-security-course/#schedule">Schedule</a>
+      <a class="nav-link"
+         href="/ai-security-course/syllabus">Syllabus</a>
+      <a class="nav-link"
+         href="/ai-security-course/resources">Resources</a>
+      <a class="nav-link"
+         href="/ai-security-course/colab">Colab</a>
+    </nav>
+
+  </div>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Class Project</h1>
+    <h3><b>Project due date: <time datetime="2026-12-08T00:00:00-05:00">Dec 8,
+    2026 (11:59PM Eastern)</time></b></h3>
+  </header>
+
+  <div class="post-content writeup-content" itemprop="articleBody">
+    <p>The class project allows you to explore a relevant topic in an
+open-ended way.  You will pick a topic at the intersection of AI and
+security. It is worth <strong>25%</strong> of the grade (see the <a href="/ai-security-course/syllabus">syllabus</a>).</p>
+
+<p>Work <strong>alone or in a group of up to three</strong>. I expect a three-person
+project to be significantly more ambitious than a solo one. Budget
+<strong>20–30 hours</strong> per person across the back half of the semester;
+roughly three to five hours a week across the span of 4-5 weeks.</p>
+
+<h2 id="proposal-due-tuesday-oct-27-1159-pm">Proposal: due Tuesday, Oct. 27, 11:59 PM</h2>
+
+<p>The proposal is one page. I will grade it lightly. The point is to
+catch a bad fit early so that I can tell you what to fix.</p>
+
+<ol>
+  <li>
+    <p><strong>What are you building, breaking, or exploring?</strong> What is your
+resulting artifact? Is it an experiment, evaluation, etc.?</p>
+  </li>
+  <li>
+    <p>Give <strong>specifics</strong> about systems, datasets, models, you will use, etc.</p>
+  </li>
+  <li>
+    <p><strong>How will you measure success?</strong> You should propose a rigorous
+evaluation framework that carefully discusses trade-offs.</p>
+  </li>
+  <li>
+    <p><strong>What’s the fallback</strong> if the ambitious version fails? You still
+need to finish <em>something</em>. Try building your project like an
+onion: “obviously going to work,” “more ambitious but we can
+probably do it,” “stretch goals.”</p>
+  </li>
+</ol>
+
+<h2 id="some-potential-project-directions">Some potential project directions…</h2>
+
+<p>Here are some starting points for you to think about</p>
+
+<ul>
+  <li>
+    <p><strong>AI-assisted bug finding.</strong> Point an agent at code with planted bugs; report
+precision and recall against ground truth, versus a conventional tool.</p>
+  </li>
+  <li>
+    <p><strong>Discovery to exploitation.</strong> Measure how far an agent gets from “a bug exists”
+to a working proof-of-concept exploit in a sandbox.</p>
+  </li>
+  <li>
+    <p><strong>Detector vs. evasion.</strong> Train a detector (malware, phishing, intrusion), then
+attack it.</p>
+  </li>
+  <li>
+    <p><strong>Break an AI-integrated app.</strong> Build a small agentic app, then
+attack it with prompt injection, tool misuse, or
+exfiltration. Implement defenses and re-evaluate.</p>
+  </li>
+  <li>
+    <p><strong>Reproduce and critique.</strong> Take a published security-and-AI result
+and try to reproduce it.</p>
+  </li>
+</ul>
+
+<p>Be <em>realistic</em> about your ability. I expect a more from a PhD student
+in security / AI versus an undergraduate taking the course as an
+elective.</p>
+
+<h2 id="full-report-due-dec-8">Full report: due Dec. 8</h2>
+
+<ul>
+  <li>
+    <p><strong>Code and artifacts</strong>, with a README that lets someone re-run your evaluation.</p>
+  </li>
+  <li>
+    <p><strong>A short report</strong> (~6–10 pages): threat model, what you built, method, results
+<em>with denominators</em>, what failed, and what’s next.</p>
+  </li>
+  <li>
+    <p>If necessary, an <em>evaluation platform</em> that allows me to <em>run</em> your
+results. If this is too hard, you may schedule a Zoom appointment
+with me to demonstrate your project working live.</p>
+  </li>
+</ul>
+
+<h2 id="presentation-late-november--early-december">Presentation: Late November / early December</h2>
+
+<ul>
+  <li>We’ll reserve one or two class sessions for class projects.</li>
+</ul>
+
+<h2 id="rubric-tentative">Rubric (Tentative)</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Criterion</th>
+      <th>Weight</th>
+      <th>Criteria</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Threat model &amp; framing</td>
+      <td>15%</td>
+      <td>I expect you to clearly articulate the threat model in your report / evaluation.</td>
+    </tr>
+    <tr>
+      <td>Technical execution</td>
+      <td>30%</td>
+      <td>Did you actually achieve the thing you said you would?</td>
+    </tr>
+    <tr>
+      <td>Evaluation</td>
+      <td>25%</td>
+      <td>I expect a rigorous evaluation that carefully measures the system; bad results are <strong>OK</strong>.</td>
+    </tr>
+    <tr>
+      <td>Honesty about limits</td>
+      <td>10%</td>
+      <td>What failed, where your result is fragile.</td>
+    </tr>
+    <tr>
+      <td>Presentation</td>
+      <td>20%</td>
+      <td>Clear, honest, and appropriately-timed.</td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+  <li>
+    <p><strong>Do not do anything illegal / improper!</strong>. Since this class involves attacks, etc. All offensive research must be carefully cleared with the instructor. If you are doing something that “feels potentially wrong,” email me specifically with a <strong>threat evaluation plan</strong> so that we can discuss if it is still OK to do your project.</p>
+  </li>
+  <li>
+    <p><strong>Do not spend (a significant amount of) personal money!</strong>. Try to
+stick to free platforms like Google Collab. If you need GPU
+infrastructure, please reach out to me personally and we can see if we
+can find something suitable for you. It is possible to rent GPUs
+(e.g., RunPod, etc.) but it gets expensive quickly; you should not be
+spending a lot of your own money to do this.</p>
+  </li>
+</ul>
+
+<div class="callout note">
+  <p><strong>Graduate sections (CIS 600 / CSE 691).</strong> It is a <em>requirement</em> that PhD students <em>engage with the relevant research literature</em> (see class syllabus). This means that your project needs to be research-adjacent, and needs to be informed by SOTA research in the relevant area. Your report must directly address competitor systems. I also <strong>recommend</strong> PhD students work <em>alone</em>.</p>
+</div>
+
+<div class="callout note">
+  <p><strong>Graduate sections (CIS 600 / CSE 691).</strong> Be careful not to “reuse” your own original research for the class. While this is often a natural fit, you are required (as part of this class) to explore some distinct aspect. You may not simply reuse existing research, and your project must represent novel work. You are, however, encouraged to “branch” your research to explore some aspect of the class. In the best case scenario, your work could even lead to a paper :-)</p>
+</div>
+
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <!-- <h2 class="footer-heading">CIS400</h2> -->
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>CIS400</li>
+          <li><a href="mailto:kkmicins@syr.edu">kkmicins@syr.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>CIS400/600 — Cybersecurity & AI (Fall '26) at Syracuse University</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
