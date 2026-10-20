@@ -1,0 +1,15 @@
+[project]
+name = "cis400-prompt-injection-demo"
+version = "0.1.0"
+description = "CIS400 in-class interactive prompt-injection demo (local or rented LLM)"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "openai>=1.50",
+  "python-dotenv>=1.0",
+  "httpx>=0.27",
+]
+
+[tool.uv]
+package = false
