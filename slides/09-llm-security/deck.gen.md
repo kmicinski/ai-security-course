@@ -313,7 +313,6 @@ Do not infer that next-token training prevents planning or reasoning. The model 
 - **Instruction hierarchy:** train on examples where the system prompt, the user, and tool output disagree, so the model learns to follow the more trusted source and treat the rest as data.
 - **StruQ:** reserve delimiters that mark where the data begins, and train on examples where that data contains commands the model must ignore.
 - **SecAlign:** show the model two responses to an injected prompt, one that does the task and one that obeys the injection, and train it to prefer the first. 
-=
 <p class="source">Wallace et al., <a href="https://arxiv.org/abs/2404.13208">The Instruction Hierarchy</a> (2024); Chen et al., <a href="https://arxiv.org/abs/2402.06363">StruQ</a> (2024); Chen et al., <a href="https://arxiv.org/abs/2410.05451">SecAlign</a> (2024).</p>
 
 Note:
