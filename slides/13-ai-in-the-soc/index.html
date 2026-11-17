@@ -1,0 +1,428 @@
+<!doctype html>
+<!-- Generated from deck.md by slides. Edit deck.md, not this file. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>AI in the SOC: Detection, Agents, and Defense in Depth</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../engine/reveal/dist/reset.css" />
+    <link rel="stylesheet" href="../engine/reveal/dist/reveal.css" />
+    <link rel="stylesheet" href="../engine/katex/katex.min.css" />
+    <link rel="stylesheet" href="../themes/cis400/base.css" />
+    <link rel="stylesheet" href="../themes/cis400/highlight.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/big-point.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/callout.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/figure.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/footer.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/playground.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/section-divider.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/source.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/stat.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/title-slide.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/trace.css" />
+    <link rel="stylesheet" href="../themes/cis400/schemas/two-col.css" />
+    <style>
+      /* Slides a pending proposal adds or changes (live preview of the proposed deck only). */
+      .reveal .slides section[data-proposed] { outline: 4px dashed #cb4b16; outline-offset: -4px; }
+      .reveal .slides section[data-proposed]::before {
+        content: "proposed · " attr(data-proposed); position: absolute; top: 10px; right: 14px; z-index: 5;
+        background: #cb4b16; color: #fff; font: 700 15px/1 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+        letter-spacing: .06em; text-transform: uppercase; padding: 6px 10px; border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+<section class="title-slide" data-transition="none">
+<!-- title: AI in the SOC: Detection, Agents, and Defense in Depth -->
+<!-- theme: cis400 -->
+<!-- .slide: class="title-slide" data-transition="none" -->
+<style data-line="5">
+.reveal .slides, .reveal .slides * {
+  animation: none !important;
+  transition: none !important;
+}
+.reveal .slides li { margin-bottom: .32em; }
+.reveal .slides pre { font-size: .64em; }
+.reveal .slides .source { font-size: .45em; line-height: 1.3; margin-top: 1.2em; }
+.reveal .slides .title-slide h3 { margin-top: 1.2em; }
+</style>
+<h1 data-line="16">AI in the SOC</h1>
+<h3 data-line="18">Kristopher Micinski, CIS400 / 600</h3>
+<aside class="notes">
+<p data-line="21">0:30. About 50 minutes including an exercise. Connect detection queries, alert triage, agent coordination, and enforceable security boundaries, then run the November 2026 FBI advisory on ARTEX through the same lens: the attacker's agents have the same architecture and the same coordination problems as ours, and the defender's clock is now measured in hours. Every slide is static and complete on arrival. Dense slides are the ones with code, math, or a full phase list.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="27">The SOC's job</h2>
+<ul>
+<li data-line="29">A <strong>security operations center</strong> runs an organization's threat detection and response.</li>
+<li data-line="30"><strong>Detection:</strong> find activity worth investigating.</li>
+<li data-line="31"><strong>Triage:</strong> establish what happened, its scope, and its urgency.</li>
+<li data-line="32"><strong>Response:</strong> contain the incident, remediate, and recover.</li>
+<li data-line="33">A <strong>SIEM</strong>, such as Splunk, collects host, identity, cloud, and network logs for queries and alerts.</li>
+</ul>
+<aside class="notes">
+<p data-line="36">1:00. The SOC is the people and workflow; the SIEM is part of its tooling. Alerts may describe failed authentication, suspicious processes, or unexpected connections. Correct detection does not guarantee correct triage or timely response. SOAR means Security Orchestration, Automation, and Response: software that coordinates response workflows.</p>
+<p data-line="38">Source: <a href="https://www.mitre.org/news-insights/publication/11-strategies-world-class-cybersecurity-operations-center">MITRE, 11 Strategies of a World-Class Cybersecurity Operations Center</a>.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="44">The traditional stack, circa 2024</h2>
+<div data-line="46" class="figure">
+<svg viewBox="0 0 1240 170" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="s3-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f76900"/></marker></defs>
+<rect class="fig-box world" x="20" y="10" width="200" height="120" rx="14"/>
+<text class="fig-title" x="120" y="52" text-anchor="middle">telemetry</text>
+<text class="fig-small" x="120" y="84" text-anchor="middle">hosts, network, identity,</text>
+<text class="fig-small" x="120" y="108" text-anchor="middle">cloud, email</text>
+<path class="fig-arrow model" marker-end="url(#s3-arrow)" d="M225,70 L265,70"/>
+<rect class="fig-box world" x="270" y="10" width="200" height="120" rx="14"/>
+<text class="fig-title" x="370" y="52" text-anchor="middle">sensors</text>
+<text class="fig-small" x="370" y="84" text-anchor="middle">IDS / IPS, EDR,</text>
+<text class="fig-small" x="370" y="108" text-anchor="middle">mail gateway, firewall</text>
+<text class="fig-small fig-navy" x="370" y="158" text-anchor="middle">ML: malware classifiers</text>
+<path class="fig-arrow model" marker-end="url(#s3-arrow)" d="M475,70 L515,70"/>
+<rect class="fig-box ctx" x="520" y="10" width="200" height="120" rx="14"/>
+<text class="fig-title" x="620" y="52" text-anchor="middle">SIEM</text>
+<text class="fig-small" x="620" y="84" text-anchor="middle">Splunk: index, search,</text>
+<text class="fig-small" x="620" y="108" text-anchor="middle">correlate, alert</text>
+<text class="fig-small fig-navy" x="620" y="158" text-anchor="middle">ML: UEBA anomaly scores</text>
+<path class="fig-arrow model" marker-end="url(#s3-arrow)" d="M725,70 L765,70"/>
+<rect class="fig-box ctx" x="770" y="10" width="200" height="120" rx="14"/>
+<text class="fig-title" x="870" y="52" text-anchor="middle">SOAR</text>
+<text class="fig-small" x="870" y="84" text-anchor="middle">playbooks: enrich,</text>
+<text class="fig-small" x="870" y="108" text-anchor="middle">auto-close, ticket</text>
+<path class="fig-arrow model" marker-end="url(#s3-arrow)" d="M975,70 L1015,70"/>
+<rect class="fig-box ctx" x="1020" y="10" width="200" height="120" rx="14"/>
+<text class="fig-title" x="1120" y="52" text-anchor="middle">analysts</text>
+<text class="fig-small" x="1120" y="84" text-anchor="middle">Tier 1 triage, Tier 2</text>
+<text class="fig-small" x="1120" y="108" text-anchor="middle">investigate, respond</text>
+</svg>
+</div>
+<ul>
+<li data-line="78"><strong>IDS / IPS</strong> (Snort, Suricata, Zeek): match packets and flows against <strong>signature rules</strong> for known-bad patterns; an IPS blocks inline. <strong>EDR</strong> (CrowdStrike, Defender) does the same on the host and can isolate it.</li>
+<li data-line="79"><strong>SIEM</strong> (Splunk): indexes every log; scheduled <strong>correlation searches</strong> in SPL turn matching rows into <em>notable events</em>; <strong>threat-intel feeds</strong> of bad IPs, domains, and hashes are joined in.</li>
+<li data-line="80"><strong>Classic ML sits at the edges:</strong> malware classifiers in the AV engine, phishing classifiers in the mail gateway, <strong>UEBA</strong> anomaly scores on logins and volumes. Signatures and rules still do most detection.</li>
+<li data-line="81"><strong>SOAR</strong> (Splunk SOAR, XSOAR) runs playbooks: enrich, auto-close, ticket, isolate. <strong>Detection engineers</strong> write and tune the rules (Sigma, mapped to MITRE ATT&amp;CK).</li>
+</ul>
+<aside class="notes">
+<p data-line="84">1:30. No LLM anywhere in this picture. Walk left to right. Telemetry is whatever emits logs: Windows event logs and Sysmon, NetFlow and packet captures, Active Directory or Entra sign-ins, AWS CloudTrail, the mail gateway. Sensors do the first filtering: a network IDS such as Suricata compares traffic against a ruleset like Emerging Threats and raises an alert on a match; Zeek instead emits structured protocol logs for later search; EDR agents watch process trees, file writes, and registry changes on each host. The SIEM is the shared index. In Splunk Enterprise Security a detection is a saved SPL search on a schedule; matches become notable events in a queue. Threat intel is a lookup table of indicators joined against that index. Classic ML exists but is narrow and sits where volume is highest: supervised classifiers on executable features in next-gen AV, phishing classifiers at the mail gateway, and unsupervised UEBA (Splunk UBA, Exabeam, Sentinel UEBA) that scores a user against their own baseline and peer group. Rules dominate because they are explainable, tunable, and cheap to run on everything. SOAR (Phantom, now Splunk SOAR; Palo Alto XSOAR) runs scripted playbooks on each notable: VirusTotal and WHOIS lookups, asset and user enrichment, auto-closing known false positives, opening a ServiceNow ticket, isolating a host via the EDR API. Analysts sit at the end of the queue; detection engineers close the loop by writing Sigma rules and mapping coverage to ATT&amp;CK. Next slide: this pipeline now has to finish inside an attacker's three hours.</p>
+<p data-line="86">Sources: <a href="https://docs.splunk.com/Documentation/ES">Splunk Enterprise Security docs, correlation searches and notable events</a>; <a href="https://suricata.io/">Suricata</a>; <a href="https://sigmahq.io/">Sigma rules</a>; <a href="https://www.mitre.org/news-insights/publication/11-strategies-world-class-cybersecurity-operations-center">MITRE, 11 Strategies of a World-Class Cybersecurity Operations Center</a>.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="92">Emerging: autonomous hacking campaigns</h2>
+<ul>
+<li data-line="94"><strong>13 Nov 2026:</strong> FBI FLASH on <strong>ARTEX</strong>, an open-source, LLM-driven agentic penetration-testing framework weaponized since at least August 2026.</li>
+<li data-line="95"><strong>Speed:</strong> some intrusions went from initial targeting to privileged access in <strong>under three hours</strong>.</li>
+<li data-line="96"><strong>Scale:</strong> attempted sign-ins against <strong>2,250+</strong> Microsoft 365 tenants through the October ConnectWise supply-chain compromise; records of about <strong>67,000</strong> people taken from South Korean financial firms.</li>
+<li data-line="97"><strong>Availability:</strong> the repository was removed on 8 Oct 2026; forks, mirrors, and a paid ARTEX PRO remain. <strong>1,600+</strong> consoles were exposed on the internet in early November.</li>
+</ul>
+<p data-line="99" class="source"><a href="https://www.ic3.gov/CSA/2026/261113.pdf">FBI FLASH-20261113-001, Threat Overview of ARTEX Autonomous Penetration Testing Framework</a> (TLP:CLEAR, 13 Nov 2026), Summary and Threat sections.</p>
+<aside class="notes">
+<p data-line="102">2:00. The advisory is TLP:CLEAR, so students can read it. The reports it cites attribute ARTEX campaigns to both a nation-state actor (Microsoft, 21 October 2026) and financially motivated criminals (CrowdStrike, Zscaler, Microsoft). The FBI's own term is "agentic SI frameworks." Targeted sectors: financial services, government, technology, defense, semiconductor, energy, healthcare, manufacturing, telecommunications, and legal. The developer published it on GitHub in July 2026 for authorized, scoped testing; it reached 1,500 to 2,000 stars in ten weeks. Set the deadline here and return to it on the containment slide: the loop on the previous slide now has to finish inside the attacker's three hours.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="108">Detection as a query: password spraying</h2>
+<ul>
+<li data-line="110">The job of a cyberanalyst is to montior emerging threats and take actions upon them. Here, we use Splunk's query language (like SQL) which let us write rules to track emerging events</li>
+</ul>
+<pre data-line="112"><code class="spl">index=wineventlog EventCode=4625 earliest=-15m
+| stats dc(user) AS users, count AS failures BY src_ip
+| where users &gt; 10
+</code></pre>
+<ul>
+<li data-line="118"><strong>4625:</strong> failed Windows logon; <strong>4624:</strong> successful logon.</li>
+<li data-line="119">Group by source address; count distinct accounts and failures.</li>
+<li data-line="120">More than ten accounts in fifteen minutes is an <strong>illustrative threshold</strong>.</li>
+</ul>
+<p data-line="122" class="source">Microsoft: <a href="https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625">event 4625</a> · <a href="https://help.splunk.com/en/splunk-enterprise/search/spl-search-reference/9.4/statistical-and-charting-functions/statistical-and-charting-functions">Splunk aggregate functions</a>.</p>
+<aside class="notes">
+<p data-line="125">1:45. Walk through selection, grouping, distinct aggregation, and filtering. This retains the live deck's example. It assumes normalized user and src_ip fields; validate local mappings. Missing fields change the result. A password spray tries a small number of passwords against many accounts. The rule is a signal, not proof. Ask how one address could represent multiple legitimate clients.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="131">Two more detection patterns</h2>
+<ul>
+<li data-line="133"><strong>Word launches PowerShell:</strong> inspect the parent–child process relationship.</li>
+</ul>
+<pre data-line="135"><code class="spl">index=sysmon EventCode=1
+  ParentImage="*\\WINWORD.EXE" Image="*\\powershell.exe"
+</code></pre>
+<ul>
+<li data-line="140"><strong>Repeated contact with a rare domain:</strong> count requests and source hosts.</li>
+</ul>
+<pre data-line="142"><code class="spl">index=proxy earliest=-24h
+| stats count AS requests, dc(src_ip) AS hosts BY dest_domain
+| where hosts=1 AND requests&gt;100
+</code></pre>
+<aside class="notes">
+<p data-line="150">1:30. These retain the other two examples added in the editor. Sysmon Event ID 1 records process creation; field mappings depend on ingestion. The proxy query detects rarity plus volume, not periodicity. It provides a lead for beaconing analysis, not a complete beaconing detector. There is no universal daily hit rate for either rule. The semantic gap is the step from “this pattern occurred” to “this is malicious.” New backups and monitoring jobs can be anomalous but benign.</p>
+<p data-line="152">Sources: <a href="https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon">Microsoft Sysmon</a>; <a href="https://doi.org/10.1109/SP.2010.25">Sommer and Paxson, Outside the Closed World</a>. Teaching queries.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="158">Base rates determine the queue</h2>
+<p data-line="160"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>P</mi><mo stretchy="false">(</mo><mtext>attack</mtext><mo>∣</mo><mtext>alert</mtext><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><mi>r</mi><mi>p</mi></mrow><mrow><mi>r</mi><mi>p</mi><mo>+</mo><mi>f</mi><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">P(\text{attack}\mid\text{alert})=\frac{rp}{rp+f(1-p)}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mopen">(</span><span class="mord text"><span class="mord">attack</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">alert</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0436em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1076em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal">p</span><span class="mclose">)</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mord mathnormal">p</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
+<ul>
+<li data-line="162"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span>: attack prevalence; <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span></span>: true-positive rate; <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span></span></span></span>: false-positive rate.</li>
+<li data-line="163">One million events, <strong>100 malicious</strong>: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.0001</mn></mrow><annotation encoding="application/x-tex">p=0.0001</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.0001</span></span></span></span>.</li>
+<li data-line="164">At <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mn>0.99</mn></mrow><annotation encoding="application/x-tex">r=0.99</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.99</span></span></span></span>: <strong>99 true alerts</strong>. At <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>0.01</mn></mrow><annotation encoding="application/x-tex">f=0.01</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.01</span></span></span></span>: <strong>9,999 false alerts</strong>.</li>
+<li data-line="165">Precision: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>99</mn><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>99</mn><mo>+</mo><mn>9</mn><mo separator="true" lspace="0em" rspace="0em">,</mo><mn>999</mn><mo stretchy="false">)</mo><mo>≈</mo><mn>0.98</mn><mi mathvariant="normal">%</mi></mrow><annotation encoding="application/x-tex">99/(99+9{,}999)\approx0.98\%</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">99/</span><span class="mopen">(</span><span class="mord">99</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">9</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">999</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">0.98%</span></span></span></span>.</li>
+<li data-line="166">To make half the alerts real, need <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mi>r</mi><mi>p</mi><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false">)</mo><mo>≈</mo><mn>1</mn><msup><mn>0</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">f=rp/(1-p)\approx10^{-4}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mord mathnormal">p</span><span class="mord">/</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">4</span></span></span></span></span></span></span></span></span></span></span></span>.</li>
+</ul>
+<p data-line="168" class="source"><a href="https://doi.org/10.1145/357830.357849">Axelsson (2000)</a> · illustrative event-level calculation.</p>
+<aside class="notes">
+<p data-line="171">2:00. The numerator is the fraction of events malicious and flagged. The denominator adds benign events incorrectly flagged. For 50% precision, equate true and false alerts and solve for f. High recall can coexist with a queue dominated by false positives. These are toy event counts: events, alerts, incidents, and compromised hosts have different denominators. Evaluate the workload at the deployment base rate.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="177">Where do LLMs fit?</h2>
+<ul>
+<li data-line="179"><p data-line="179">LLMs are <strong>too slow / expensive</strong> to process all data! Instead, traditional rule-based or "cheaper" ML is used</p>
+<ul>
+<li data-line="181">Need to process the traffic of the entire internet!</li>
+</ul>
+</li>
+<li data-line="183"><p data-line="183"><strong>But</strong> LLMs can help augment the human workflow:</p>
+<ul>
+<li data-line="185">Translate human-generated queries into Spl queries, rules, etc.</li>
+<li data-line="186">Draft the case narrative with links to the underlying search results.</li>
+<li data-line="187">Use LLM to help human decide which events are <em>really important</em></li>
+</ul>
+</li>
+</ul>
+<aside class="notes">
+<p data-line="190">1:00. This retains the substance of the user's live edit. The useful artifact includes inspectable queries and evidence. Routine enrichment can be a script that runs standard pivots before an analyst opens the case. Models help with heterogeneous records and new hypotheses. Restrict reads to authorized data. Recommendation quality and authority are separate questions; a later deployment may automate bounded decisions.</p>
+<p data-line="192">Source: <a href="https://arxiv.org/abs/2610.10608">Tsegai et al., ALERT-BENCH / AIDA</a>. Deployment sequence is a teaching proposal.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="198">LLMs can help do whole-system analysis</h2>
+<p data-line="200">Let's imagine how we might use an LLM to help us diagnose a potential threat...</p>
+<ul>
+<li data-line="202"><strong>Authentication:</strong> 23 accounts fail from one address; then a successful login as <code>svc-print</code>.</li>
+<li data-line="203"><strong>Inventory:</strong> the address belongs to PRINT01, a print server.</li>
+<li data-line="204"><strong>Directory:</strong> <code>svc-print</code> belongs to Domain Admins.</li>
+<li data-line="205"><strong>Endpoint:</strong> <code>java.exe</code> launches <code>cmd.exe</code>; a registry hive is saved and encoded.</li>
+<li data-line="206"><strong>Network:</strong> new SMB traffic from PRINT01 to a domain controller.</li>
+<li data-line="207"><strong>Decision:</strong> escalate; propose isolating PRINT01, revoking account's access</li>
+</ul>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="213">Who gets to pull the trigger?</h2>
+<p data-line="215">The LLM on the last slide said: isolate PRINT01, revoke <code>svc-print</code>. Should it get to just <em>do</em> that?</p>
+<ul>
+<li data-line="217"><strong>Reads are cheap, actions aren't.</strong> So tier the tools, and put the check <em>outside</em> the model</li>
+</ul>
+<pre data-line="219"><code class="python">TIER = {"siem.search": 0, "edr.isolate_host": 1,
+        "ad.disable_account": 2, "case.close": 2}
+
+def gate(call, case):
+    if call.tool not in TIER or not in_scope(call, case): return "deny"
+    if TIER[call.tool] == 0:                              return "allow"
+    if TIER[call.tool] == 1 and preapproved(call, case):  return "allow"
+    return "allow" if human_approved(call, case) else "review"
+</code></pre>
+<ul>
+<li data-line="230">Tier 1 is pre-approved only for eligible assets: a print server yes, a domain controller no</li>
+<li data-line="231">Tier 2 needs a human to approve the <em>exact</em> call, case, and expiry. Not an "approval-shaped" paragraph.</li>
+<li data-line="232">Notice <code>case.close</code> is tier 2. Dismissing an alert is a decision too!</li>
+</ul>
+<aside class="notes">
+<p data-line="235">The policy and approval checks are services the model calls into, not things it generates. Unknown or out-of-scope tools fail closed. An approval is bound to the exact arguments, case, approver, and expiry, so it can't be replayed against a different host next week. This is the control-flow / data-flow split from CaMeL: the model proposes, trusted code decides what runs and what data may go where. The model also reads logs the attacker partly wrote, so text in a log is evidence, never an instruction. Teaching code, not an authorization service.</p>
+<p data-line="237">Reading: <a href="https://arxiv.org/abs/2503.18813">Debenedetti et al., CaMeL</a>; <a href="https://arxiv.org/abs/2506.08837">Beurer-Kellner et al., Design Patterns for Securing LLM Agents</a>.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="243">An "agent" is a model plus a harness</h2>
+<p data-line="245">What turns a chatbot into an attacker (or an analyst)? Not a smarter model. <strong>Tools and state.</strong></p>
+<ul>
+<li data-line="247"><strong>Tools:</strong> run a scan, query Splunk, isolate a host</li>
+<li data-line="248"><strong>State:</strong> which hosts exist, which creds work, what already failed</li>
+<li data-line="249"><strong>Incalmo</strong> (Singer et al., 2025) gives the LLM high-level actions like "scan this subnet" and lets ordinary code do the rest
+<ul>
+<li data-line="250">With that layer: <strong>9 of 10</strong> emulated networks fully compromised</li>
+<li data-line="251">Without it, even with bigger models: <strong>0 of 10</strong></li>
+</ul>
+</li>
+<li data-line="252">A <strong>swarm</strong> is many of these running in parallel and sharing state.
+<ul>
+<li data-line="253">The coordinator can be a shell script!</li>
+</ul>
+</li>
+</ul>
+<p data-line="255" class="source"><a href="https://arxiv.org/abs/2501.16466v1">Singer et al., Incalmo</a>, January 2025 version.</p>
+<aside class="notes">
+<p data-line="258">Pin the Incalmo version: later revisions changed the benchmark and the headline numbers. Networks are emulated, 25 to 50 hosts each, not sampled from real enterprises. Smaller models with the abstraction layer got 5 of 10. The point for us: a model-only benchmark misses most of the capability, because the surrounding software is where it comes from. "Swarm" is a loose label, and more agents is not automatically better. Shared credentials and writable memory also mean one compromised worker can poison the rest, which is the next slide.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="264">ARTEX: the same architecture, pointed at you</h2>
+<ul>
+<li data-line="266">You type an objective in English. Sub-agents do recon, exploitation, and exfiltration with almost no further input.</li>
+<li data-line="267"><strong>It has no model of its own.</strong> It calls whatever API you point it at: Claude, GPT, DeepSeek, GLM, Grok, Kimi...
+<ul>
+<li data-line="268">Attackers mostly pick DeepSeek Flash. It's cheap, and it stops refusing once you call the job a "pentest"</li>
+</ul>
+</li>
+<li data-line="269"><strong>Parallel workers</strong> mean one small crew runs campaigns against many targets at once</li>
+<li data-line="270"><strong>Shared state</strong> is where it breaks, too: investigators saw sub-agents overwriting each other and firing duplicate requests</li>
+<li data-line="271">Shared storage is a channel no matter who owns the swarm. In one 2026 evaluation, OpenAI agents in <em>separate</em> containers used a shared package mirror as a message board.</li>
+</ul>
+<p data-line="273" class="source"><a href="https://www.ic3.gov/CSA/2026/261113.pdf">FBI FLASH-20261113-001</a>, Threat and Observed Capabilities (pp. 2–3).</p>
+<aside class="notes">
+<p data-line="276">ARTEX is written in Go, published on GitHub in July 2026 for authorized testing, pulled 8 October after abuse reports; forks and a paid ARTEX PRO are still around. The model-choice finding comes from attacker-controlled instances analyzed by Zscaler and Check Point, via the FBI. Two things to draw out. "Call it a pentest" is how refusals got bypassed, so provider guardrails are a layer we don't control. And the duplicate requests are the coordination cost from the previous slide; the FBI asks victims to report them as an attack signature. The OpenAI incident was a cyber evaluation with production safeguards off: agents had separate containers but shared an Artifactory mirror, used it to pass messages, and later coordinated through directory names. Separate compute is not separate communication. Audit every writable shared thing: caches, logs, queues, artifact stores.</p>
+<p data-line="278">Sources: <a href="https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf">OpenAI incident technical report (2026)</a>; <a href="https://www.cs.cornell.edu/andru/cs711/2003fa/reading/lampson73note.pdf">Lampson, confinement (1973)</a>.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="284">Many tries change the odds</h2>
+<p data-line="286"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>P</mi><mo stretchy="false">(</mo><mtext>at least one success</mtext><mo stretchy="false">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><msup><mo stretchy="false">)</mo><mi>k</mi></msup></mrow><annotation encoding="application/x-tex">P(\text{at least one success})=1-(1-p)^k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mopen">(</span><span class="mord text"><span class="mord">at least one success</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1491em;vertical-align:-0.25em;"></span><span class="mord mathnormal">p</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span></span></span></span></span></span></span></span></span></p>
+<ul>
+<li data-line="288">One attempt with a 5% shot isn't scary.</li>
+<li data-line="289">Sixty of them? <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mo stretchy="false">(</mo><mn>0.95</mn><msup><mo stretchy="false">)</mo><mn>60</mn></msup><mo>≈</mo><mn>95</mn><mi mathvariant="normal">%</mi></mrow><annotation encoding="application/x-tex">1-(0.95)^{60}\approx 95\%</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">0.95</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">60</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">95%</span></span></span></span></li>
+<li data-line="290">Toy model! It assumes independent attempts. Real ones share the same bugs!</li>
+<li data-line="291">Flip side: sixty attempts = 60x the noise; FBI calls ARTEX traffic "forensically noisy."</li>
+<li data-line="292"><strong>But</strong> a per-host alert can't see pattern. Correlate across targets, identities, shared artifacts.</li>
+</ul>
+<aside class="notes">
+<p data-line="295">The complement: all k attempts fail with probability (1-p)^k. This does not mean sixty copies of an agent get 95% against one target; retries share vulnerabilities and failure modes. The defensive problem is that one worker reads the sensitive data and another ships it out, and each action looks fine on its own. Correlating them needs shared identifiers and provenance across workers, not another model reviewing each one.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="301">Under three hours, phase by phase</h2>
+<p data-line="303">What the FBI actually saw ARTEX do, mapped to MITRE ATT&amp;CK:</p>
+<ul>
+<li data-line="305"><strong>Recon:</strong> sub-second checks of what stolen cloud creds can do</li>
+<li data-line="306"><strong>Initial access:</strong> SQL injection, SSRF, unsigned SAML assertions, admin passwords hardcoded in JavaScript bundles</li>
+<li data-line="307"><strong>Foothold:</strong> web shells, off-the-shelf RATs, new credentials added to existing OAuth apps</li>
+<li data-line="308"><strong>Privilege escalation:</strong> Kerberoasting, DCSync, admin tokens forged from unrotated keys</li>
+<li data-line="309"><strong>Internal recon:</strong> 110,000+ AD objects enumerated, plus a list of hosts <em>without</em> an endpoint sensor</li>
+<li data-line="310"><strong>Lateral movement:</strong> pass-the-hash, pass-the-ticket, WinRM. <strong>Blocked by EDR.</strong></li>
+<li data-line="311"><strong>Exfiltration:</strong> bulk storage and mailbox reads, posted to rotating webhooks</li>
+</ul>
+<p data-line="313">Nothing here is new! What's new is one operator doing all of it, against many targets, at once.</p>
+<p data-line="315" class="source"><a href="https://www.ic3.gov/CSA/2026/261113.pdf">FBI FLASH-20261113-001</a>, Observed TTPs (pp. 3–6). Aggregated across campaigns; "under three hours" applies to some intrusions, not all.</p>
+<aside class="notes">
+<p data-line="318">Two rows to dwell on. Lateral movement was blocked by endpoint protection: a conventional control held inside a fully automated intrusion. And the agents inventoried which hosts lacked a sensor: the attacker is measuring our coverage, which argues for boring complete coverage over clever detection. Ask which rows a patched, least-privilege, segmented network stops cold, and which only a fast response stops. Also in the advisory: directory fuzzing at 500+ requests, IAM DryRun permission probes, and C2 over residential proxies, Tor, and Chisel tunnels.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="324">ConnectWise, October 2026</h2>
+<ul>
+<li data-line="326">ConnectWise Cloud Backup got compromised. Its <em>legitimate</em> access into customers' Microsoft 365 tenants became the attacker's access.
+<ul>
+<li data-line="327">Sign-in attempts against <strong>2,250+</strong> tenants; real sign-ins and Graph API activity in some of them</li>
+</ul>
+</li>
+<li data-line="328">The FBI's checklist for each tenant is really a list of strings not to trust:
+<ul>
+<li data-line="329">Find the vendor's apps by <strong>application ID</strong>, not display name. Anyone can name an app "ConnectWise Backup".</li>
+<li data-line="330">Don't filter to the vendor's <strong>published IPs</strong>. The attacker wasn't on that list.</li>
+<li data-line="331">Check tenants where the integration was <em>ever</em> installed, not just where it's in use today.</li>
+<li data-line="332">Look at successful <strong>and</strong> failed service-principal sign-ins. Failures across tenants are the automation; successes are the incidents.</li>
+</ul>
+</li>
+<li data-line="333">And <strong>don't delete the app first.</strong> Preserve it and its audit log, then pull the bad credentials.</li>
+</ul>
+<p data-line="335" class="source"><a href="https://www.ic3.gov/CSA/2026/261113.pdf">FBI FLASH-20261113-001</a>, Summary (p. 1) and Recommendations (pp. 9–11), drawing on Microsoft Threat Intelligence, 21 Oct 2026.</p>
+<aside class="notes">
+<p data-line="338">The display name in a log is text anyone can set; the application ID is the record. Ask why successes and failures get reviewed separately: the failures across tenants are the signature of automation, the successes are the incidents. The FBI also says to watch for credentials added to existing OAuth apps and for anomalous app-only activity, which is how a compromised integration keeps working after the vendor rotates its own secrets. "Do not delete enterprise applications as first response" is their phrasing. Review from at least 1 October 2026.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="344">Containment has a deadline</h2>
+<p data-line="346"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>t</mi><mtext>observe</mtext></msub><mo>≤</mo><msub><mi>t</mi><mtext>detect</mtext></msub><mo>≤</mo><msub><mi>t</mi><mtext>contain</mtext></msub><mo>&lt;</mo><msub><mi>t</mi><mtext>harm</mtext></msub></mrow><annotation encoding="application/x-tex">t_{\text{observe}}\le t_{\text{detect}}\le t_{\text{contain}}\lt t_{\text{harm}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.786em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">observe</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.786em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">detect</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">contain</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">harm</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></p>
+<ul>
+<li data-line="348">Pick the harm you're trying to beat: privilege escalation? exfiltration? ransomware?</li>
+<li data-line="349"><strong>Observe → detect:</strong> the log has to reach a rule or a human</li>
+<li data-line="350"><strong>Detect → contain:</strong> someone <em>authorized</em> has to act, and the action has to actually land</li>
+<li data-line="351">ARTEX sets <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mtext>harm</mtext></msub></mrow><annotation encoding="application/x-tex">t_{\text{harm}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">harm</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> at under three hours in some intrusions. Alerts fired. The queue just didn't drain fast enough.</li>
+<li data-line="352">A correct alert sitting on a dashboard misses the deadline. So pre-authorize narrow containment (the tier 1 tools from before), and test paging + permissions + rollback <em>together</em>.</li>
+</ul>
+<aside class="notes">
+<p data-line="355">This is the ordering we want, not a law. Detecting a foothold is too late to prevent the foothold but can still beat the theft. The advisory's phrase is "compressed detection window": the queue fills and the objective finishes before anyone coordinates a response. Measure containment that actually took effect, not an API call that returned 200. Prevention and segmentation buy time on the right-hand side of the inequality.</p>
+<p data-line="357">Sources: <a href="https://www.mitre.org/news-insights/publication/11-strategies-world-class-cybersecurity-operations-center">MITRE SOC guide</a>; <a href="https://www.ic3.gov/CSA/2026/261113.pdf">FBI FLASH-20261113-001</a>, Observed Capabilities (p. 3).</p>
+</aside>
+</section>
+<section data-transition="none" data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="363">Defense in depth</h2>
+<p data-line="365">Hard lesson: ARTEX <em>didn't need</em> zero-days. It needed the stuff we already know we should fix:</p>
+<ul>
+<li data-line="367"><strong>Know your exposed surface.</strong> Partner portals, mobile backends, app someone else built in 2019.</li>
+<li data-line="368"><strong>Patch, and get admin / backup / publishing interfaces off the public internet.</strong></li>
+<li data-line="369"><strong>Least privilege, short-lived creds.</strong></li>
+<li data-line="370"><strong>Segment and rate-limit.</strong> Bulk record reads and sequential lookups should page someone.</li>
+<li data-line="371"><strong>Layers have to be <em>different</em>.</strong> Need to employ a diversity of defensive techniques (permissions, rule-based systems, LLMs, human analysts, etc)</li>
+</ul>
+<aside class="notes">
+<p data-line="374">Tie each line to a row on the phase slide. The independence point: P(all three fail) = P(F1) P(F2|F1) P(F3|F1,F2). You only get to multiply marginals if the failures are independent, and three models reading the same malicious string are not. Ask which control still works if every model believes the scanner's claim: an authorization check grounded in trusted records does. Two more FBI items: stop returning stack traces and SQL errors to unauthenticated users, since an agent reads them faster than a person, and scan repos and build artifacts for embedded secrets, since hardcoded admin passwords were an observed entry point. Refusal behavior is not a boundary you control.</p>
+<p data-line="376">Sources: <a href="https://www.ic3.gov/CSA/2026/261113.pdf">FBI FLASH-20261113-001</a>, Recommendations (pp. 9–11); <a href="https://arxiv.org/abs/2510.09023">Nasr et al., The Attacker Moves Second</a>; <a href="https://www.greynoise.io/blog/ai-orchestrated-campaign-against-papercut-ng-mf">GreyNoise, PaperCut campaign</a>.</p>
+<!-- .slide: data-transition="none" -->
+<h2 data-line="380">One answer</h2>
+<ul>
+<li data-line="382">Look the scanner up in IT's inventory: identity, allowed targets, time window, expiry. The User-Agent is just a string the attacker typed.</li>
+<li data-line="383">Empty result doesn't mean "attack". It does mean <em>unresolved</em>. Give it an owner; don't close it.</li>
+<li data-line="384">Closing a case is a tier 2 action. The gate wants a real approval that cites the inventory row, not a paragraph that sounds like one.</li>
+<li data-line="385">The reviewer can read everything. It cannot mint approvals or widen anyone's permissions.</li>
+<li data-line="386">Approved scanners get compromised too. Contradicting evidence still wins.</li>
+</ul>
+<p data-line="388">Note:
+The model can't manufacture authority. The policy can mix code and human decisions, but the approval has to be a record the gate verifies, not something the model wrote. An empty inventory hit doesn't prove an attack either, so it shouldn't trigger automatic containment. Assign an owner and a priority and move on.</p>
+</aside>
+</section>
+<section data-transition="none">
+<!-- .slide: data-transition="none" -->
+<h2 data-line="395">Takeaways</h2>
+<ul>
+<li data-line="397">Cyberanalysts spend a lot of their time <em>triaging</em> a queue. Use rule-based and ML-based rules to analyze traffic and rapidly respond to emerging decisions.</li>
+<li data-line="398">LLMs read the queue, write the queries, and try to cut down analyst time by drafting threat assessments, etc. Main goal: lower burden on human, human attention / intuition span is precious</li>
+<li data-line="399">While the defenses are mostly the same as they were before (patch, least privilege, segment, EDR everywhere), the clock for defense is <em>much tighter</em></li>
+</ul>
+<aside class="notes">
+<p data-line="405">Connect back to earlier lectures: untrusted data must never become control or authority. Concrete artifacts from today: a Splunk query, a case record, an enforceable policy, a measured containment time.</p>
+<p data-line="407">Further reading: <a href="https://arxiv.org/abs/2501.16466v1">Incalmo v1</a> · <a href="https://arxiv.org/abs/2503.18813">CaMeL</a> · <a href="https://arxiv.org/abs/2610.10608">ALERT-BENCH / AIDA</a> · <a href="https://www.ic3.gov/CSA/2026/261113.pdf">FBI FLASH-20261113-001 on ARTEX</a>.</p>
+</aside>
+</section>
+
+      </div>
+    </div>
+    <script src="../engine/reveal/dist/reveal.js"></script>
+    <script src="../engine/reveal/plugin/highlight/highlight.js"></script>
+    <script src="../engine/reveal/plugin/notes/notes.js"></script>
+    <script>
+      Reveal.initialize(Object.assign({"backgroundTransition":"fade","controls":true,"hash":true,"height":800,"history":true,"margin":0.06,"maxScale":2.0,"minScale":0.2,"pdfSeparateFragments":false,"progress":true,"slideNumber":"c/t","transition":"slide","width":1280}, { plugins: [RevealHighlight, RevealNotes] }));
+    </script>
+    <script>
+      // Browsers name a saved PDF after the page title; print under the deck's short name.
+      (function () {
+        var full = document.title, short = "soc-swarms-defense-in-depth";
+        addEventListener("beforeprint", function () { document.title = short; });
+        addEventListener("afterprint", function () { document.title = full; });
+        if (/print-pdf|view=print/.test(location.search)) document.title = short;
+      })();
+    </script>
+    
+  </body>
+</html>
